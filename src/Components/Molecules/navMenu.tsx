@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import NavTitle from "@/Components/Atoms/navTitle"
+import Card from "./card"
 
 type NavItem = {
   label: string
@@ -46,13 +47,10 @@ export default function NavMenu({ userRole }: NavMenuProps) {
   const menuItems = getMenuItems()
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-4 bg-teal-600 text-white font-medium">Gestión de consultorios</div>
-      <div className="divide-y divide-gray-200">
-        {menuItems.map((item) => (
-          <NavTitle key={item.href} href={item.href} label={item.label} />
-        ))}
-      </div>
-    </div>
+    <Card title="Gestión de consultorios">
+      {menuItems.map((item) => (
+        <NavTitle key={item.href} href={item.href} label={item.label} />
+      ))}
+    </Card>
   )
 }
