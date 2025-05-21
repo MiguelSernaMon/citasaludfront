@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import Card from "@/Components/Molecules/card"
 import AppLayout from "@/Components/Templates/appLayout"
 import ConsultingRoomCard from "@/Components/Molecules/consultingRoomCard"

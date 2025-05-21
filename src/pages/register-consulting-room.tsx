@@ -5,6 +5,7 @@ import AppLayout from "@/Components/Templates/appLayout"
 import Input from "@/Components/Atoms/input"
 import Select from "@/Components/Atoms/select"
 import Button from "@/Components/Atoms/button"
+import NotificationMessage from "@/Components/Molecules/notificationMessage"
 
 export default function RegisterConsultingRoom() {
   const [formData, setFormData] = useState({
@@ -63,8 +64,12 @@ export default function RegisterConsultingRoom() {
   return (
     <AppLayout>
         <Card title="Registro consultorio" className="space-y-6 pb-6" titleClassName="text-xl">
-            {success && <div className="m-6 p-4 bg-green-100 text-green-800 rounded-md">Registro exitoso</div>}
-
+            {success && (
+              <NotificationMessage
+                type="success"
+                message="Registro exitoso"
+              />
+            )}
             <div className="max-w-2xl mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
