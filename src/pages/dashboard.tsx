@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { UserProvider } from "@/context/userContext"
-import NavMenu from "@/Components/Molecules/navMenu"
 import Card from "@/Components/Molecules/card"
-import AppHeader from "@/Components/Molecules/appHeader"
+import AppLayout from "@/Components/Templates/appLayout"
 import ConsultingRoomCard from "@/Components/Molecules/consultingRoomCard"
 import ConsultingRoomFilters from "@/Components/Molecules/consultingRoomFilters"
 import ConsultingRoomExport from "@/Components/Molecules/consultingRoomExport"
@@ -50,23 +48,6 @@ const consultingRooms: ConsultingRoom[] = [
 ]
 
 export default function Dashboard() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    const userData = localStorage.getItem("user")
-    if (userData) {
-      setUser(JSON.parse(userData))
-    } else {
-      router.push("/")
-    }
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem("user")
-    router.push("/")
-  }
-
   const siteOptions = [
     { value: "", label: "Todas" },
     { value: "north", label: "Norte" },
@@ -99,51 +80,31 @@ export default function Dashboard() {
     { value: "csv", label: "CSV" },
   ]
 
-  if (!user) return null
-
   return (
-    <UserProvider>
-      <div className="min-h-screen bg-gray-100">
-        <AppHeader user={user} onLogout={handleLogout} />
+    <AppLayout>
+        <Card title="Dashboard" titleClassName="text-xl">
+            <div className="p-6 space-y-6">
+            <ConsultingRoomFilters
+                siteOptions={siteOptions}
+                specialtyOptions={specialtyOptions}
+                statusOptions={statusOptions}
+            />
 
-        <main className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-1">
-              <NavMenu userRole={user.role} />
+            <ConsultingRoomExport
+                fileTypeOptions={fileTypeOptions}
+                onExport={() => console.log("Exportar datos")}
+            />
+
+            <div className="space-y-4">
+                <h3 className="text-lg font-medium">Consultorios Registrados</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {consultingRooms.map((room) => (
+                    <ConsultingRoomCard key={room.id} room={room} />
+                ))}
+                </div>
             </div>
-
-            <div className="md:col-span-3">
-                <Card title="Dashboard" titleClassName="text-xl">
-
-                    <div className="p-6">
-                    <div className="space-y-6">
-                        <ConsultingRoomFilters
-                            siteOptions={siteOptions}
-                            specialtyOptions={specialtyOptions}
-                            statusOptions={statusOptions}
-                        />
-
-                        <ConsultingRoomExport
-                            fileTypeOptions={fileTypeOptions}
-                            onExport={() => console.log("Exportar datos")}
-                        />
-
-                        <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Consultorios Registrados</h3>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            {consultingRooms.map((consultingRoom) => (
-                               <ConsultingRoomCard key={consultingRoom.id} room={consultingRoom} />
-                            ))}
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                </Card>
             </div>
-          </div>
-        </main>
-      </div>
-    </UserProvider>
+        </Card>
+    </AppLayout>
   )
 }
