@@ -25,13 +25,13 @@ export default function AppLayout({children}: AppLayoutProps) {
         if (userData) {
         setUser(JSON.parse(userData))
         } else {
-        router.push("/login")
+        router.push("/")
         }
     }, [router])
 
     const handleLogout = () => {
         localStorage.removeItem("user")
-        router.push("/login")
+        router.push("/")
     }
 
     if (!user) return null
