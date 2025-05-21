@@ -24,7 +24,7 @@ export default function NavMenu({ userRole }: NavMenuProps) {
         return [
           { label: "Dashboard", href: "/dashboard" },
           { label: "Registro consultorio", href: "/register-consulting-room" },
-          { label: "Consultorios existentes", href: "/consultations-list" },
+          { label: "Consultorios existentes", href: "/list-consulting-room" },
           { label: "Solicitud de asignación", href: "/assignment-request" },
           { label: "Mantenimientos programados", href: "/maintenance-schedule" },
         ]
