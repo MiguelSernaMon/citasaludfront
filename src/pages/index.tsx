@@ -45,7 +45,7 @@ export default function Login() {
     <UserProvider>
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
         <Card className="w-full max-w-md">
-          <CardHeader className="bg-teal-600 text-white text-center py-6">
+          <CardHeader className="bg-[var(--color-primary)] text-white text-center py-6">
             <h1 className="text-3xl font-bold">CITASalud</h1>
           </CardHeader>
 
