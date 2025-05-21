@@ -20,7 +20,7 @@ export default function NavTitle({ href, label}: NavTitleProps) {
       href={href}
       className={cn(
               "block p-4 hover:bg-gray-50 transition-colors",
-              isActive && "bg-teal-50 text-teal-700 font-medium",
+              isActive && "bg-[var(--color-primary-50)] text-[var(--color-primary-700)] font-medium",
             )}
     >
       {label}

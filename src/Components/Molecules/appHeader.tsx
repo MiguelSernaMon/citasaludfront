@@ -42,7 +42,7 @@ const AppHeader: FC<AppHeaderProps> = ({ user, onLogout, className }) => {
             variant="ghost"
             size="sm"
             onClick={onLogout}
-            className="text-white hover:bg-teal-700"
+            className="text-white hover:bg-[var(--color-primary-700)]"
           >
             Cerrar sesión
           </Button>
