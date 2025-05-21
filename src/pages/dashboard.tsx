@@ -4,13 +4,6 @@ import ConsultingRoomCard from "@/Components/Molecules/consultingRoomCard"
 import ConsultingRoomFilters from "@/Components/Molecules/consultingRoomFilters"
 import ConsultingRoomExport from "@/Components/Molecules/consultingRoomExport"
 
-type User = {
-  name: string
-  document: string
-  email: string
-  role: string
-}
-
 type ConsultingRoomStatus = "available" | "assigned" | "maintenance"
 
 type ConsultingRoom = {

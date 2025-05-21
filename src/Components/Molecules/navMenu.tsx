@@ -1,8 +1,3 @@
-"use client"
-
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
 import NavTitle from "@/Components/Atoms/navTitle"
 import Card from "./card"
 
@@ -16,8 +11,6 @@ type NavMenuProps = {
 }
 
 export default function NavMenu({ userRole }: NavMenuProps) {
-  const pathname = usePathname()
-
   const getMenuItems = (): NavItem[] => {
     switch (userRole) {
       case "administrator":

@@ -1,7 +1,6 @@
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 
