@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader } from "@/Components/Atoms/card"
+import Card from "@/Components/Molecules/card"
 import Input from "@/Components/Atoms/input"
 import Button from '@/Components/Atoms/button';
 import { UserProvider } from "@/context/userContext"
@@ -44,12 +44,9 @@ export default function Login() {
   return (
     <UserProvider>
       <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="bg-[var(--color-primary)] text-white text-center py-6">
-            <h1 className="text-3xl font-bold">CITASalud</h1>
-          </CardHeader>
-
-          <CardContent className="p-6">
+        <Card title="CITASalud" titleClassName="text-xl" className="w-full max-w-md">
+        
+          <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <h2 className="text-xl font-semibold mb-6">Información del usuario</h2>
 
@@ -94,7 +91,7 @@ export default function Login() {
                 Iniciar sesión
               </Button>
             </form>
-          </CardContent>
+          </div>
         </Card>
       </div>
     </UserProvider>
