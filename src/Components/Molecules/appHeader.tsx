@@ -3,6 +3,7 @@
 import type { FC } from "react"
 import Button from "@/Components/Atoms/button"
 import { cn } from "@/lib/utils"
+import NotificationCenter from "./notificationCenter"
 
 interface AppHeaderProps {
   user: {
@@ -33,6 +34,8 @@ const AppHeader: FC<AppHeaderProps> = ({ user, onLogout, className }) => {
         <h1 className="text-2xl font-bold">CITASalud</h1>
 
         <div className="flex items-center gap-4">
+          <NotificationCenter />
+          
           <div className="hidden md:block text-sm">
             <span className="opacity-75 mr-1">{getRoleLabel(user.role)}:</span>
             <span>{user.name}</span>

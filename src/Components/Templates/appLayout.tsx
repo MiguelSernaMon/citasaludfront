@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import AppHeader from "@/Components/Molecules/appHeader"
 import NavMenu from "@/Components/Molecules/navMenu"
 import { UserProvider } from "@/context/userContext"
+import { NotificationProvider } from "@/context/notificationContext"
 
 type User = {
   name: string
@@ -37,24 +38,24 @@ export default function AppLayout({children}: AppLayoutProps) {
     if (!user) return null
 
     return (
+      <UserProvider>
+        <NotificationProvider>
+          <div className="min-h-screen bg-gray-100">
+            <AppHeader user={user} onLogout={handleLogout} />
 
-    <UserProvider>
-    <div className="min-h-screen bg-gray-100">
-      <AppHeader user={user} onLogout={handleLogout} />
+            <main className="container mx-auto px-4 py-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="md:col-span-1">
+                  <NavMenu userRole={user.role} />
+                </div>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="md:col-span-1">
-            <NavMenu userRole={user.role} />
+                <div className="md:col-span-3">
+                  {children}
+                </div>
+              </div>
+            </main>
           </div>
-
-          <div className="md:col-span-3">
-            {children}
-          </div>
-        </div>
-      </main>
-    </div>
-
-    </UserProvider>
-  )
+        </NotificationProvider>
+      </UserProvider>
+    )
 }
