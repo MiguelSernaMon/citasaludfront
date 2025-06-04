@@ -9,7 +9,7 @@ interface NotificationCenterProps {
 }
 
 const NotificationCenter: FC<NotificationCenterProps> = ({ className }) => {
-  const { notifications, clearNotification, clearAllNotifications, connectionStatus, addTestNotification } = useNotifications()
+  const { notifications, clearNotification, clearAllNotifications, connectionStatus} = useNotifications()
   const [isOpen, setIsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -80,14 +80,6 @@ const NotificationCenter: FC<NotificationCenterProps> = ({ className }) => {
           <div className="flex items-center justify-between border-b p-3">
             <h3 className="font-medium">Notificaciones</h3>
             <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={addTestNotification}
-                className="text-xs bg-blue-100"
-              >
-                Test
-              </Button>
               {notifications.length > 0 && (
                 <Button
                   variant="ghost"
