@@ -37,7 +37,6 @@ const NotificationContext = createContext<NotificationContextType>({
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [stompClient, setStompClient] = useState<Client | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<string>("disconnected")
   
   // Usamos useRef para asegurarnos de que solo creamos una conexión WebSocket
@@ -200,12 +199,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               
               // Intentar usar el mensaje crudo como notificación
               const now = Date.now();
-              const message = `Nuevo mantenimiento: ${message.body}`;
-              const contentHash = generateContentHash(message, now);
+              const notificationMessage = `Nuevo mantenimiento: ${message.body}`;
+              const contentHash = generateContentHash(notificationMessage, now);
               
               addNotification({
                 id: `${now}-${Math.random().toString(36).substring(2, 9)}`,
-                message,
+                message: notificationMessage,
                 timestamp: new Date().toISOString(),
                 type: "info",
                 contentHash
@@ -263,7 +262,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       
       // Iniciar conexión
       client.activate()
-      setStompClient(client)
 
       // Limpiar al desmontar
       return () => {
@@ -300,6 +298,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications([])
   }
 
+  
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
