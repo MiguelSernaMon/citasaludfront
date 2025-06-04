@@ -66,7 +66,8 @@ const NotificationCenter: FC<NotificationCenterProps> = ({ className }) => {
           onClick={toggleOpen}
           className="relative p-2"
         >
-          <Bell className="h-5 w-5" />
+          {/* Asegurarnos de que la campana sea visible aplicando un color explícito */}
+          <Bell className="h-5 w-5 text-gray-700" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
               {unreadCount}
@@ -78,7 +79,7 @@ const NotificationCenter: FC<NotificationCenterProps> = ({ className }) => {
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-80 rounded-md border border-gray-200 bg-white shadow-lg z-50">
           <div className="flex items-center justify-between border-b p-3">
-            <h3 className="font-medium">Notificaciones</h3>
+            <h3 className="font-medium text-gray-800">Notificaciones</h3>
             <div className="flex gap-2">
               {notifications.length > 0 && (
                 <Button
