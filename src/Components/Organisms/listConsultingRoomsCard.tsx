@@ -60,9 +60,20 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
         <Button variant="outline" size="sm" onClick={() => onModify(consultingRoom.id)}>
           Modificar
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(consultingRoom.id)}>
-          Eliminar
+        {consultingRoom.availability === "inactive" && 
+          (
+            <Button 
+          variant="destructive" 
+          size="sm" 
+          onClick={() => onDelete(consultingRoom.id)}
+          // Mostrar un estilo diferente si está en mantenimiento o inactivo
+          className={consultingRoom.availability === "inactive" ? "bg-orange-500 hover:bg-orange-600" : ""}
+        >
+          {consultingRoom.availability === "inactive" ? "Eliminar (No operativo)" : "Eliminar"}
         </Button>
+          )
+        }
+        
       </div>
     </div>
   )
