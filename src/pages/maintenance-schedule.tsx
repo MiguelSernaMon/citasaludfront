@@ -20,14 +20,6 @@ export default function MaintenanceSchedule() {
   })
   const [success, setSuccess] = useState(false)
 
-  const specialtyOptions = [
-    { value: "cardiology", label: "Cardiología" },
-    { value: "dermatology", label: "Dermatología" },
-    { value: "neurology", label: "Neurología" },
-    { value: "pediatrics", label: "Pediatría" },
-    { value: "dentistry", label: "Odontología" },
-  ]
-
   const siteOptions = [
     { value: "north", label: "Norte" },
     { value: "south", label: "Sur" },
@@ -71,15 +63,6 @@ export default function MaintenanceSchedule() {
                 name="consultationNumber"
                 value={formData.consultationNumber}
                 onChange={handleChange}
-                required
-              />
-
-              <Select
-                label="Especialidad"
-                name="specialty"
-                value={formData.specialty}
-                onChange={handleChange}
-                options={specialtyOptions}
                 required
               />
 
