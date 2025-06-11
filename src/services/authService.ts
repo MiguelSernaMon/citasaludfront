@@ -48,7 +48,7 @@ export const authService = {
       }
 
       return data;
-    } catch (error) {
+    } catch  {
       return {
         error: "Error de conexión con el servidor",
       };
@@ -77,7 +77,7 @@ export const authService = {
       }
 
       return data;
-    } catch (error) {
+    } catch  {
       return {
         error: "Error de conexión con el servidor",
       };
