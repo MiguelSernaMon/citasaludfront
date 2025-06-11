@@ -318,9 +318,9 @@ export default function ListConsultingRoom() {
               </p>
               {consultingRooms.length === 0 && (
                 <Button 
-                  variant="link" 
+                  variant="ghost" // Cambiando "link" por "ghost" que es una de las variantes permitidas
                   onClick={() => router.push("/register-consulting-room")}
-                  className="mt-2"
+                  className="mt-2 text-blue-600 hover:text-blue-800 underline" // Añadimos estos estilos para que se parezca a un link
                 >
                   ¿Desea agregar un nuevo consultorio?
                 </Button>

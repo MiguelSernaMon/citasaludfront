@@ -211,7 +211,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           
           // También suscribirse a otros posibles tópicos
           client.subscribe("/topic/alerts", (message) => {
-            console.log("Alerta recibida:", message)
             try {
               const notification = JSON.parse(message.body)
               const now = Date.now();
