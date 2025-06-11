@@ -145,7 +145,7 @@ export default function RegisterConsultingRoom() {
       setTimeout(() => {
         router.push("/list-consulting-room");
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al registrar consultorio:", error);
       setErrorMessage("No se pudo registrar el consultorio. Intente nuevamente.");
     } finally {

@@ -51,6 +51,14 @@ async function executeGraphQLQuery(query: string, variables = {}) {
   }
 }
 
+// Primero, definamos interfaces para las respuestas del servidor
+interface ApiResponse<T> {
+  data?: T;
+  message?: string;
+  success?: boolean;
+}
+
+
 export const consultorioService = {
   /**
    * Obtener todos los consultorios (usando GraphQL)
@@ -112,7 +120,7 @@ export const consultorioService = {
   /**
    * Crear un nuevo consultorio (REST)
    */
-  createConsultorio: async (data: CreateConsultorioDto): Promise<any> => {
+  createConsultorio: async (data: CreateConsultorioDto): Promise<ApiResponse<ConsultorioResponseDTO>> => {
     try {
       console.log("Datos a enviar:", data);
       const response = await fetch(`${REST_URL}`, {
@@ -129,7 +137,18 @@ export const consultorioService = {
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
       
-      return await response.text();
+      // Intentar parsear como JSON primero
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json() as ApiResponse<ConsultorioResponseDTO>;
+      }
+      
+      // Si no es JSON, devolver el texto como un mensaje
+      const text = await response.text();
+      return {
+        success: true,
+        message: text || 'Consultorio creado correctamente'
+      };
     } catch (error) {
       console.error("Error al crear consultorio:", error);
       throw error;
@@ -139,7 +158,7 @@ export const consultorioService = {
   /**
    * Actualizar un consultorio existente (REST)
    */
-  updateConsultorio: async (id: number, data: Partial<CreateConsultorioDto>): Promise<any> => {
+  updateConsultorio: async (id: number, data: Partial<CreateConsultorioDto>): Promise<ApiResponse<ConsultorioResponseDTO>> => {
     try {
       const response = await fetch(`${REST_URL}/${id}`, {
         method: 'PUT',
@@ -155,7 +174,18 @@ export const consultorioService = {
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
       
-      return await response.text();
+      // Intentar parsear como JSON primero
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json() as ApiResponse<ConsultorioResponseDTO>;
+      }
+      
+      // Si no es JSON, devolver el texto como un mensaje
+      const text = await response.text();
+      return {
+        success: true,
+        message: text || 'Consultorio actualizado correctamente'
+      };
     } catch (error) {
       console.error(`Error al actualizar consultorio con ID ${id}:`, error);
       throw error;
@@ -165,7 +195,7 @@ export const consultorioService = {
   /**
    * Eliminar un consultorio (REST)
    */
-  deleteConsultorio: async (id: number): Promise<any> => {
+  deleteConsultorio: async (id: number): Promise<ApiResponse<void>> => {
     try {
       const response = await fetch(`${REST_URL}/${id}`, {
         method: 'DELETE',
@@ -180,7 +210,18 @@ export const consultorioService = {
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
       
-      return await response.text();
+      // Intentar parsear como JSON primero
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json() as ApiResponse<void>;
+      }
+      
+      // Si no es JSON, devolver el texto como un mensaje
+      const text = await response.text();
+      return {
+        success: true,
+        message: text || 'Consultorio eliminado correctamente'
+      };
     } catch (error) {
       console.error(`Error al eliminar consultorio con ID ${id}:`, error);
       throw error;

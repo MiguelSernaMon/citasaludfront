@@ -104,7 +104,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       });
 
       // Manejar respuesta vacía o no-JSON
-      const contentType = response.headers.get("content-type");
       if (response.status === 403) {
         setAuthState(prev => ({ 
           ...prev, 
