@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import AppLayout from "@/Components/Templates/appLayout"
 import Card from "@/Components/Molecules/card"
 import Button from "@/Components/Atoms/button"
@@ -7,17 +6,7 @@ import { Badge } from "@/Components/Atoms/badge"
 import NotificationMessage from "@/Components/Molecules/notificationMessage"
 import { consultorioService, ConsultorioResponseDTO } from "@/services/consultorioService"
 
-interface MappedConsultorio {
-  id: string
-  number: string
-  specialty: string
-  site: string
-  location: string
-  availability: string
-}
-
 export default function ManageInactiveRooms() {
-  const router = useRouter();
   const [inactiveRooms, setInactiveRooms] = useState<ConsultorioResponseDTO[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -137,15 +126,7 @@ export default function ManageInactiveRooms() {
     }
   };
 
-  // Mapear la respuesta de la API a nuestro modelo de datos
-  const mapConsultorio = (consultorio: ConsultorioResponseDTO): MappedConsultorio => ({
-    id: consultorio.id_consultorio.toString(),
-    number: consultorio.numero_consultorio,
-    specialty: consultorio.tipo,
-    site: consultorio.sede,
-    location: consultorio.ciudad,
-    availability: consultorio.estado.toLowerCase() === "activo" ? "active" : "inactive",
-  });
+
 
   const getStatusBadge = (estado: string) => {
     if (estado.toLowerCase() === "mantenimiento") {
@@ -258,7 +239,7 @@ export default function ManageInactiveRooms() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => handleDeleteSelected([room.id_consultorio.toString()])}
+                      onClick={() => handleDeleteSelected()}
                     >
                       Eliminar
                     </Button>

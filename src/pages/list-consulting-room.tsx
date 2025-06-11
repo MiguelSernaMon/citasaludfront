@@ -10,9 +10,6 @@ import NotificationMessage from "@/Components/Molecules/notificationMessage"
 export default function ListConsultingRoom() {
   const router = useRouter();
   const [consultingRooms, setConsultingRooms] = useState<ConsultorioResponseDTO[]>([]);
-  const [tiposConsultorio, setTiposConsultorio] = useState<{ id: number, nombre: string }[]>([]);
-  const [sedes, setSedes] = useState<{ id: number, nombre: string }[]>([]);
-  const [estados, setEstados] = useState<{ id: number, nombre: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
