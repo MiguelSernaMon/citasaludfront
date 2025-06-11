@@ -84,6 +84,7 @@ export const consultorioService = {
         console.warn("No se obtuvieron datos de consultorios");
         return [];
       }
+      alert(result.getAllConsultorios[0].estado);
       return result.getAllConsultorios;
     } catch (error) {
       console.error("Error al obtener consultorios:", error);

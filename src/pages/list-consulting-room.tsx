@@ -64,7 +64,7 @@ export default function ListConsultingRoom() {
     specialty: consultorio.tipo,
     site: consultorio.sede,
     location: consultorio.ciudad,
-    availability: consultorio.estado.toLowerCase() === "activo" ? "active" : "inactive",
+    availability: consultorio.estado,
   });
 
   return (

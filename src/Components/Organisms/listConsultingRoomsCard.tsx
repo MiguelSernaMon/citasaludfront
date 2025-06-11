@@ -9,8 +9,32 @@ interface ConsultingRoom {
   specialty: string
   site: string
   location: string
-  availability: string
+  availability: string // Ahora trabajaremos solo con strings
 }
+
+// Función auxiliar para obtener la variante de la badge según el estado
+const getStatusVariant = (status: string) => {
+  switch(status.toLowerCase()) {
+    case "habilitado":
+      return "success" as const;
+    case "deshabilitado":
+      return "destructive" as const;
+    case "asignado":
+      return "warning" as const;
+    default:
+      return "secondary" as const;
+  }
+};
+
+// Función auxiliar para determinar si un consultorio está deshabilitado
+const isDisabled = (status: string): boolean => {
+  return status.toLowerCase() === "deshabilitado";
+};
+
+// Función auxiliar para determinar si un consultorio está asignado
+const isAssigned = (status: string): boolean => {
+  return status.toLowerCase() === "asignado";
+};
 
 interface ListConsultingRoomCardProps {
   consultingRoom: ConsultingRoom
@@ -20,17 +44,20 @@ interface ListConsultingRoomCardProps {
 }
 
 const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
-  consultingRoom: consultingRoom,
+  consultingRoom,
   onModify,
   onDelete,
   className,
 }) => {
+  // Obtener la variante según el estado
+  const statusVariant = getStatusVariant(consultingRoom.availability);
+  
   return (
     <div className={cn("bg-gray-50 rounded-lg p-4 border border-gray-200", className)}>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-sm font-medium text-gray-500">Número de consultorio:</p>
-          <p>{consultingRoom.number}</p>
+          <p className="font-medium">{consultingRoom.number}</p>
         </div>
 
         <div>
@@ -49,31 +76,47 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-500">Disponibilidad:</p>
-          <Badge variant={consultingRoom.availability === "active" ? "success" : "secondary"}>
-            {consultingRoom.availability === "active" ? "Activo" : "Inactivo"}
-          </Badge>
+          <p className="text-sm font-medium text-gray-500">Estado:</p>
+          <div className="mt-1">
+            <Badge variant={statusVariant}>
+              {consultingRoom.availability}
+            </Badge>
+          </div>
         </div>
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => onModify(consultingRoom.id)}>
+        {/* Botón de modificar siempre visible */}
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => onModify(consultingRoom.id)}
+        >
           Modificar
         </Button>
-        {consultingRoom.availability === "inactive" && 
-          (
-            <Button 
-          variant="destructive" 
-          size="sm" 
-          onClick={() => onDelete(consultingRoom.id)}
-          // Mostrar un estilo diferente si está en mantenimiento o inactivo
-          className={consultingRoom.availability === "inactive" ? "bg-orange-500 hover:bg-orange-600" : ""}
-        >
-          {consultingRoom.availability === "inactive" ? "Eliminar (No operativo)" : "Eliminar"}
-        </Button>
-          )
-        }
         
+        {/* Botón de eliminar solo para consultorios deshabilitados */}
+        {isDisabled(consultingRoom.availability) && (
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => onDelete(consultingRoom.id)}
+          >
+            Eliminar
+          </Button>
+        )}
+        
+        {/* Botón para ver asignación solo para consultorios asignados */}
+        {isAssigned(consultingRoom.availability) && (
+          <Button 
+            variant="warning" 
+            size="sm" 
+            onClick={() => onModify(consultingRoom.id)}
+            className="bg-amber-500 hover:bg-amber-600 text-white"
+          >
+            Ver asignación
+          </Button>
+        )}
       </div>
     </div>
   )
