@@ -82,21 +82,70 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
-    
+    const AUTHURL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:8081";
+
     try {
-      const response = await fetch(`https://auth-service-k5un.onrender.com/api/auth/login`, {
+      console.log("Intentando login en:", `${AUTHURL}/api/auth/login`);
+      console.log("Credenciales:", { username: credentials.username, password: "********" });
+
+      const response = await fetch(`${AUTHURL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json"
         },
         body: JSON.stringify(credentials),
       });
 
-      const data = await response.json();
-      console.log("Respuesta de API:", data); // Importante para depurar
+      console.log("Respuesta recibida:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      // Manejar respuesta vacía o no-JSON
+      const contentType = response.headers.get("content-type");
+      if (response.status === 403) {
+        setAuthState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: "Acceso denegado. Verifique sus credenciales." 
+        }));
+        return false;
+      }
+
+      // Verificar si hay contenido y si es JSON
+      const text = await response.text();
+      console.log("Texto de respuesta:", text);
+
+      let data;
+      if (text && text.trim()) {
+        try {
+          data = JSON.parse(text);
+          console.log("Datos parseados:", data);
+        } catch (parseError) {
+          console.error("Error al parsear JSON:", parseError);
+          setAuthState(prev => ({ 
+            ...prev, 
+            loading: false, 
+            error: "El servidor devolvió una respuesta inválida" 
+          }));
+          return false;
+        }
+      } else {
+        console.warn("Respuesta vacía del servidor");
+        setAuthState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: response.status === 200 
+            ? "El servidor no envió datos de autenticación" 
+            : `Error ${response.status}: ${response.statusText}`
+        }));
+        return false;
+      }
 
       if (!response.ok) {
-        const errorMsg = data.message || "Error al iniciar sesión";
+        const errorMsg = data?.message || "Error al iniciar sesión";
         console.error("Error en login:", errorMsg);
         setAuthState(prev => ({ 
           ...prev, 
@@ -108,8 +157,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       // Extraer los campos correctos según la estructura de tu API
       const token = data.accessToken || data.token;
+      
+      if (!token) {
+        console.error("No se encontró token en la respuesta:", data);
+        setAuthState(prev => ({ 
+          ...prev, 
+          loading: false, 
+          error: "El servidor no devolvió un token válido" 
+        }));
+        return false;
+      }
+      
       const userData = {
-        id: data.id || data.userId,
+        id: data.id || data.userId || 0,
         name: data.username || data.name || credentials.username, 
         email: data.email || "",
         role: mapRole(data.roles || []),

@@ -17,7 +17,7 @@ export interface ConsultorioResponseDTO {
   ciudad: string;
 }
 
-const BASE_URL = "http://localhost:8080"; // Cambia esto por la URL de tu backend
+const BASE_URL = process.env.NEXT_PUBLIC_CONSULTING_URL; // Cambia esto por la URL de tu backend
 const REST_URL = `${BASE_URL}/consultorio`;
 const GRAPHQL_URL = `${BASE_URL}/graphql`; // URL base para peticiones GraphQL
 
@@ -71,7 +71,12 @@ export const consultorioService = {
     
     try {
       const result = await executeGraphQLQuery(query);
-      return result?.getAllConsultorios || []; // Devuelve array vacío si es undefined
+      // Verificación más robusta
+      if (!result || !result.getAllConsultorios) {
+        console.warn("No se obtuvieron datos de consultorios");
+        return [];
+      }
+      return result.getAllConsultorios;
     } catch (error) {
       console.error("Error al obtener consultorios:", error);
       return []; // Siempre devuelve un array, aunque sea vacío
@@ -109,11 +114,12 @@ export const consultorioService = {
    */
   createConsultorio: async (data: CreateConsultorioDto): Promise<any> => {
     try {
+      console.log("Datos a enviar:", data);
       const response = await fetch(`${REST_URL}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeaders(),
+          "Authorization": `Bearer ${localStorage.getItem("token")}`, // Reemplaza con tu token real
         },
         body: JSON.stringify(data),
       });
@@ -211,27 +217,22 @@ export const consultorioService = {
   },
   
   /**
-   * Obtener sedes (Datos de prueba, puede ser reemplazado con una llamada real)
+   * Obtener sedes (datos quemados según la información proporcionada)
    */
   getSedes: async (): Promise<{ id: number, nombre: string }[]> => {
-    // Esto debería ser reemplazado por una llamada a la API si está disponible
-    try {
-      // Datos de muestra
-      return [
-        { id: 1, nombre: "Norte" },
-        { id: 2, nombre: "Sur" },
-        { id: 3, nombre: "Este" },
-        { id: 4, nombre: "Oeste" },
-        { id: 5, nombre: "Centro" },
-      ];
-    } catch (error) {
-      console.error("Error al obtener sedes:", error);
-      return [
-        { id: 1, nombre: "Norte" },
-        { id: 2, nombre: "Sur" },
-        { id: 3, nombre: "Este" },
-      ];
-    }
+    // Datos fijos de sedes
+    return [
+      { id: 1, nombre: "Sede Norte" },
+      { id: 2, nombre: "Sede Sur" },
+      { id: 3, nombre: "Sede Centro" },
+      { id: 4, nombre: "Sede Occidente" },
+      { id: 5, nombre: "Sede Oriente" },
+      { id: 6, nombre: "Sede Industrial" },
+      { id: 7, nombre: "Sede Comercial" },
+      { id: 8, nombre: "Sede Universitaria" },
+      { id: 9, nombre: "Sede Rural" },
+      { id: 10, nombre: "Sede Principal" }
+    ];
   },
   
   /**

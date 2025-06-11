@@ -96,7 +96,7 @@ export default function ListConsultingRoom() {
             <p className="text-center py-8">Cargando consultorios...</p>
           ) : consultingRooms && consultingRooms.length > 0 ? (
             <div className="space-y-4">
-              {consultingRooms.map(consultorio => (
+              {Array.isArray(consultingRooms) && consultingRooms.map(consultorio => (
                 <ListConsultingRoomCard
                   key={consultorio.id_consultorio}
                   consultingRoom={mapConsultorio(consultorio)}

@@ -170,9 +170,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           });
           return socket;
         },
-        debug: (msg) => {
-          console.log("STOMP Debug:", msg);
-        },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,

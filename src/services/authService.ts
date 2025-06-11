@@ -20,7 +20,7 @@ interface AuthResponse {
   error?: string;
 }
 
-const BASE_URL = "https://auth-service-k5un.onrender.com/api/auth";
+const BASE_URL = `${process.env.NEXT_PUBLIC_AUTH_URL}/api/auth`;
 
 /**
  * Servicio para manejar la autenticación con el backend
