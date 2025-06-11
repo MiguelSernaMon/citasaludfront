@@ -7,15 +7,18 @@ import Button from "@/Components/Atoms/button"
 import Select from "@/Components/Atoms/select"
 import { consultorioService, CreateConsultorioDto } from "@/services/consultorioService"
 import NotificationMessage from "@/Components/Molecules/notificationMessage"
+import { useParams } from "next/navigation"
 
-export default function RegisterConsultingRoom() {
+export default function EditConsultingRoom() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
   
-  const [formData, setFormData] = useState<CreateConsultorioDto>({
+  const [formData, setFormData] = useState<CreateConsultorioDto & { id?: number }>({
     numeroConsultorio: "",
     tipoConsultorio_id: 0,
     sede_id: 0,
-    estado_id: 1 // Por defecto activo
+    estado_id: 1
   });
 
   const [saving, setSaving] = useState(false);
@@ -28,31 +31,47 @@ export default function RegisterConsultingRoom() {
   const [sedes, setSedes] = useState<{ id: number, nombre: string }[]>([]);
   const [estados, setEstados] = useState<{ id: number, nombre: string }[]>([]);
   
-  // Cargar los datos de las listas desplegables
+  // Cargar los datos del consultorio y las opciones
   useEffect(() => {
-    const loadOptions = async () => {
+    const loadData = async () => {
+      if (!id) return;
+      
       setLoading(true);
       try {
         // Cargar datos en paralelo
-        const [tiposData, sedesData, estadosData] = await Promise.all([
+        const [consultorio, tiposData, sedesData, estadosData] = await Promise.all([
+          consultorioService.getConsultorioById(id),
           consultorioService.getTiposConsultorio(),
           consultorioService.getSedes(),
           consultorioService.getEstados()
         ]);
         
+        // Mapear los datos del consultorio a nuestro formulario
+        const tipoId = tiposData.find(t => t.nombre === consultorio.tipo)?.id || 0;
+        const sedeId = sedesData.find(s => s.nombre === consultorio.sede)?.id || 0;
+        const estadoId = estadosData.find(e => e.nombre === consultorio.estado)?.id || 1;
+        
+        setFormData({
+          id: consultorio.id_consultorio,
+          numeroConsultorio: consultorio.numero_consultorio,
+          tipoConsultorio_id: tipoId,
+          sede_id: sedeId,
+          estado_id: estadoId
+        });
+        
         setTiposConsultorio(tiposData);
         setSedes(sedesData);
         setEstados(estadosData);
       } catch (error) {
-        console.error("Error cargando opciones:", error);
-        setError("No se pudieron cargar algunas opciones. Por favor, recargue la página.");
+        console.error("Error cargando datos:", error);
+        setError("No se pudo cargar la información del consultorio.");
       } finally {
         setLoading(false);
       }
     };
     
-    loadOptions();
-  }, []);
+    loadData();
+  }, [id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,7 +80,6 @@ export default function RegisterConsultingRoom() {
       [name]: name.endsWith('_id') ? Number(value) : value
     }));
     
-    // Limpiar mensajes de error cuando el usuario empieza a escribir
     if (error) {
       setError(null);
     }
@@ -80,24 +98,22 @@ export default function RegisterConsultingRoom() {
     setError(null);
     
     try {
-      await consultorioService.createConsultorio(formData);
-      setSuccess("Consultorio registrado correctamente");
-      
-      // Limpiar el formulario
-      setFormData({
-        numeroConsultorio: "",
-        tipoConsultorio_id: 0,
-        sede_id: 0,
-        estado_id: 1
+      await consultorioService.updateConsultorio(formData.id!, {
+        numeroConsultorio: formData.numeroConsultorio,
+        tipoConsultorio_id: formData.tipoConsultorio_id,
+        sede_id: formData.sede_id,
+        estado_id: formData.estado_id
       });
+      
+      setSuccess("Consultorio actualizado correctamente");
       
       // Redirigir después de 2 segundos
       setTimeout(() => {
         router.push("/list-consulting-room");
       }, 2000);
     } catch (error) {
-      console.error("Error al registrar consultorio:", error);
-      setError("No se pudo registrar el consultorio. Verifique la conexión e intente nuevamente.");
+      console.error("Error al actualizar consultorio:", error);
+      setError("No se pudo actualizar el consultorio");
     } finally {
       setSaving(false);
     }
@@ -106,9 +122,9 @@ export default function RegisterConsultingRoom() {
   if (loading) {
     return (
       <AppLayout>
-        <Card title="Registrar Nuevo Consultorio" titleClassName="text-xl">
+        <Card title="Editar Consultorio" titleClassName="text-xl">
           <div className="p-6 text-center">
-            <p>Cargando opciones...</p>
+            <p>Cargando datos del consultorio...</p>
           </div>
         </Card>
       </AppLayout>
@@ -117,7 +133,7 @@ export default function RegisterConsultingRoom() {
 
   return (
     <AppLayout>
-      <Card title="Registrar Nuevo Consultorio" titleClassName="text-xl">
+      <Card title="Editar Consultorio" titleClassName="text-xl">
         {error && <NotificationMessage type="error" message={error} className="mb-4" />}
         {success && <NotificationMessage type="success" message={success} className="mb-4" />}
         
@@ -187,7 +203,7 @@ export default function RegisterConsultingRoom() {
               type="submit"
               disabled={saving}
             >
-              {saving ? "Registrando..." : "Registrar consultorio"}
+              {saving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </form>
