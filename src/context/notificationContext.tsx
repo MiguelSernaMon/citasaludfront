@@ -9,7 +9,6 @@ interface Notification {
   message: string
   timestamp: string
   type: string
-  // Agregamos un hash para detectar duplicados
   contentHash?: string
 }
 
@@ -50,39 +49,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return `${message}-${Math.floor(timestamp / 10000)}` // Agrupar por franjas de 10 segundos
   }
 
-  // Función para agregar una notificación de prueba
-  // const addTestNotification = () => {
-  //   console.log("Agregando notificación de prueba")
-  //   const now = Date.now()
-  //   const message = "Esta es una notificación de prueba"
-  //   const contentHash = generateContentHash(message, now)
-    
-  //   // Verificar si ya procesamos una notificación similar recientemente
-  //   if (processedNotifications.current.has(contentHash)) {
-  //     console.log("Notificación duplicada detectada y omitida:", contentHash)
-  //     return
-  //   }
-    
-  //   // Marcar esta notificación como procesada
-  //   processedNotifications.current.add(contentHash)
-    
-  //   // Eliminar notificaciones antiguas del registro (más de 30 segundos)
-  //   setTimeout(() => {
-  //     processedNotifications.current.delete(contentHash)
-  //   }, 30000)
-    
-  //   setNotifications((prev) => [
-  //     {
-  //       id: `${now}-${Math.random().toString(36).substring(2, 9)}`, // ID verdaderamente único
-  //       message: message,
-  //       timestamp: new Date().toISOString(),
-  //       type: "info",
-  //       contentHash
-  //     },
-  //     ...prev
-  //   ])
-  // }
-
   // Función para formatear una fecha desde el array [año, mes, día, hora, minuto]
   const formatDate = (dateArray: number[]) => {
     if (!dateArray || dateArray.length < 5) return "Fecha no disponible";
@@ -90,6 +56,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // Nota: En JavaScript los meses van de 0-11, mientras que en el array vienen 1-12
     const [year, month, day, hour, minute] = dateArray;
     const date = new Date(year, month-1, day, hour, minute);
+    
     return date.toLocaleString('es-ES', { 
       day: '2-digit',
       month: '2-digit',
@@ -147,28 +114,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     console.log("Intentando conectar al WebSocket...")
     setConnectionStatus("connecting")
     
-    // Agregar notificación de prueba al inicio para verificar que el sistema funciona
-    // Pero solo la primera vez, con un pequeño retraso
-    // const timeoutId = setTimeout(() => {
-    //   addTestNotification();
-    // }, 2000);
-    
-    // Evitar conexiones múltiples - verificar si ya tenemos un cliente
-    // if (clientRef.current) {
-    //   console.log("Ya existe una conexión WebSocket, reutilizando");
-    //   return () => {
-    //     clearTimeout(timeoutId);
-    //   };
-    // }
+    // Obtener el token JWT del localStorage
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.warn("No hay token JWT disponible, no se puede conectar al WebSocket");
+      setConnectionStatus("error");
+      return () => {};
+    }
     
     try {
-      // Configurar conexión WebSocket con opciones CORS
+      // URL base desde las variables de entorno
+      const WS_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "https://maintenance-alerts-service.onrender.com/ws-mantenimiento";
+      
+      // Configurar conexión WebSocket con opciones CORS y JWT
       const client = new Client({
         webSocketFactory: () => {
-          const socket = new SockJS("http://localhost:8080/ws-mantenimiento", [], {
+          // Añadir el token como parámetro de la URL para autenticación
+          const socket = new SockJS(`${WS_URL}?token=${token}`, [], {
             transports: ['websocket', 'xhr-streaming', 'xhr-polling']
           });
           return socket;
+        },
+        connectHeaders: {
+          // También incluir el token en los headers de la conexión
+          'Authorization': `Bearer ${token}`
+        },
+        debug: (msg) => {
+          console.log("STOMP Debug:", msg);
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
@@ -177,8 +149,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           console.log("Conectado al servidor WebSocket")
           setConnectionStatus("connected")
           
+          // Obtener ID del usuario desde localStorage para la suscripción
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const userId = user.id || '123'; // Valor por defecto en caso de no existir
+          
           // Suscribirse al tema de notificaciones de mantenimiento
-          client.subscribe("/topic/notificaciones/123", (message) => {
+          client.subscribe(`/topic/notificaciones/${userId}`, (message) => {
             console.log("Mensaje recibido:", message)
             try {
               console.log("Contenido del mensaje:", message.body);
@@ -209,12 +185,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             }
           })
           
-          // También suscribirse a otros posibles tópicos
+          // Suscripción a tópicos específicos para todos los usuarios
           client.subscribe("/topic/alerts", (message) => {
             try {
               const notification = JSON.parse(message.body)
               const now = Date.now();
-              const msg = notification.message || "Nueva alerta recibida";
+              const msg = notification.message || "Nueva alerta del sistema";
               const contentHash = generateContentHash(msg, now);
               
               addNotification({
@@ -225,7 +201,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 contentHash
               });
             } catch (error) {
-              console.error("Error al procesar la alerta:", error)
+              console.error("Error al procesar la alerta general:", error)
             }
           })
         },
@@ -236,14 +212,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         onWebSocketError: (event) => {
           console.error("Error en WebSocket:", event)
           setConnectionStatus("error")
-          
-          // Solo mostrar notificación de error si no hay conexión activa
-          // if (connectionStatus !== "connected") {
-          //   // Agregar notificación de error para ver si el componente funciona
-          //   setTimeout(() => {
-          //     addTestNotification();
-          //   }, 1000);
-          // }
         },
         onWebSocketClose: () => {
           console.log("WebSocket cerrado")
@@ -261,7 +229,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
       // Limpiar al desmontar
       return () => {
-        // clearTimeout(timeoutId);
         if (client && client.connected) {
           console.log("Desactivando cliente WebSocket existente");
           client.deactivate()
@@ -272,19 +239,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       console.error("Error al configurar WebSocket:", error)
       setConnectionStatus("error")
       
-      // Solo mostrar notificación de error si no hay conexión activa
-      if (connectionStatus !== "connected") {
-        // Agregar notificación de error para ver si el componente funciona
-        setTimeout(() => {
-          // addTestNotification();
-        }, 1000);
-      }
-      
       return () => {
-        // clearTimeout(timeoutId);
+        // Función de limpieza vacía
       };
     }
-  }, [connectionStatus]) // Solo dependemos de connectionStatus para reconectar si es necesario
+  }, []) // Solo se ejecutará una vez al montar el componente
 
   const clearNotification = (id: string) => {
     setNotifications((prev) => prev.filter((notification) => notification.id !== id))
@@ -294,14 +253,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications([])
   }
 
-  
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
       clearNotification, 
       clearAllNotifications,
-      connectionStatus,
-      // addTestNotification
+      connectionStatus
     }}>
       {children}
     </NotificationContext.Provider>

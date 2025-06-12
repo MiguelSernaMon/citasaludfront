@@ -82,7 +82,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginCredentials): Promise<boolean> => {
     setAuthState(prev => ({ ...prev, loading: true, error: null }));
-    const AUTHURL = process.env.NEXT_PUBLIC_AUTH_URL || "http://localhost:8081";
+    const AUTHURL = process.env.NEXT_PUBLIC_AUTH_URL || "https://auth-service-k5un.onrender.com";
 
     try {
       console.log("Intentando login en:", `${AUTHURL}/api/auth/login`);
