@@ -25,30 +25,31 @@ interface Estado {
 
 // Datos quemados para los selectores
 const TIPOS_CONSULTORIO: TipoConsultorio[] = [
-  { id: 1, nombre: "Medicina General" },
-  { id: 2, nombre: "Pediatría" },
-  { id: 3, nombre: "Ginecología" },
-  { id: 4, nombre: "Cardiología" },
-  { id: 5, nombre: "Dermatología" },
-  { id: 6, nombre: "Oftalmología" },
-  { id: 7, nombre: "Otorrinolaringología" },
-  { id: 8, nombre: "Psiquiatría" },
-  { id: 9, nombre: "Psicología" },
-  { id: 10, nombre: "Nutrición" }
-];
+  { "id": 1, "nombre": "Pediatría" },
+  { "id": 2, "nombre": "Medicina General" },
+  { "id": 3, "nombre": "Odontología" },
+  { "id": 4, "nombre": "Ginecología" },
+  { "id": 5, "nombre": "Cardiología" },
+  { "id": 6, "nombre": "Dermatología" },
+  { "id": 7, "nombre": "Psiquiatría" },
+  { "id": 8, "nombre": "Oftalmología" },
+  { "id": 9, "nombre": "Traumatología" },
+  { "id": 10, "nombre": "Neurología" }
+]
 
 const SEDES: Sede[] = [
-  { id: 1, nombre: "Sede Norte" },
-  { id: 2, nombre: "Sede Sur" },
-  { id: 3, nombre: "Sede Centro" },
-  { id: 4, nombre: "Sede Occidente" },
-  { id: 5, nombre: "Sede Oriente" },
-  { id: 6, nombre: "Sede Industrial" },
-  { id: 7, nombre: "Sede Comercial" },
-  { id: 8, nombre: "Sede Universitaria" },
-  { id: 9, nombre: "Sede Rural" },
-  { id: 10, nombre: "Sede Principal" }
-];
+  { "id": 1, "nombre": "Sede Norte" },
+  { "id": 2, "nombre": "Sede Sur" },
+  { "id": 3, "nombre": "Sede Centro" },
+  { "id": 4, "nombre": "Sede Occidente" },
+  { "id": 5, "nombre": "Sede Oriente" },
+  { "id": 6, "nombre": "Sede Industrial" },
+  { "id": 7, "nombre": "Sede Comercial" },
+  { "id": 8, "nombre": "Sede Universitaria" },
+  { "id": 9, "nombre": "Sede Rural" },
+  { "id": 10, "nombre": "Sede Principal" }
+]
+
 
 const ESTADOS: Estado[] = [
   { id: 1, nombre: "Activo" },

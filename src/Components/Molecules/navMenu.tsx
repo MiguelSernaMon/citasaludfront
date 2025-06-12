@@ -41,32 +41,32 @@ export default function NavMenu({ userRole }: NavMenuProps) {
 
   const getMenuItems = () => {
     // Elementos comunes para todos los roles
-    let items = [{ label: "Dashboard", href: "/dashboard" }]
 
     switch (userRole) {
       case "administrator":
         return [
-          ...items,
+          { label: "Dashboard", href: "/list-consulting-room" },
           { label: "Registro consultorio", href: "/register-consulting-room" },
-          { label: "Consultorios existentes", href: "/list-consulting-room" },
           { label: "Consultorios no operativos", href: "/manage-inactive-rooms" },
-          { label: "Solicitud de asignación", href: "/assignment-request" },
           { label: "Mantenimientos programados", href: "/maintenance-schedule" },
         ]
       case "coordinator":
         return [
-          ...items,
+
           { label: "Asignación de consultorios", href: "/assign-consulting-room" },
           { label: "Programación de especialidades", href: "/specialty-schedule" },
         ]
       case "doctor":
         return [
-          ...items,
+
           { label: "Mi consultorio", href: "/my-consulting-room" },
           { label: "Horario de atención", href: "/attention-schedule" },
         ]
       default:
-        return items
+        return [
+          { label: "Mi consultorio", href: "/my-consulting-room" },
+          { label: "Horario de atención", href: "/attention-schedule" },
+        ]
     }
   }
 

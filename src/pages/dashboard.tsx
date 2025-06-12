@@ -50,12 +50,18 @@ export default function Dashboard() {
   ]
 
   const specialtyOptions = [
-    { value: "", label: "Todas" },
-    { value: "cardiology", label: "Cardiología" },
-    { value: "dermatology", label: "Dermatología" },
-    { value: "neurology", label: "Neurología" },
-    { value: "pediatrics", label: "Pediatría" },
-    { value: "dentistry", label: "Odontología" },
+  
+  { "id": 1, "nombre": "Pediatría" },
+  { "id": 2, "nombre": "Medicina General" },
+  { "id": 3, "nombre": "Odontología" },
+  { "id": 4, "nombre": "Ginecología" },
+  { "id": 5, "nombre": "Cardiología" },
+  { "id": 6, "nombre": "Dermatología" },
+  { "id": 7, "nombre": "Psiquiatría" },
+  { "id": 8, "nombre": "Oftalmología" },
+  { "id": 9, "nombre": "Traumatología" },
+  { "id": 10, "nombre": "Neurología" }
+
   ]
 
   const statusOptions = [

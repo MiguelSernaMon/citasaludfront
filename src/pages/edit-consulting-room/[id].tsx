@@ -9,6 +9,40 @@ import { consultorioService, CreateConsultorioDto } from "@/services/consultorio
 import NotificationMessage from "@/Components/Molecules/notificationMessage"
 import { useParams } from "next/navigation"
 
+// Datos por defecto (fallback) por si fallan las peticiones
+const DEFAULT_TIPOS_CONSULTORIO = [
+  { "id": 1, "nombre": "Pediatría" },
+  { "id": 2, "nombre": "Medicina General" },
+  { "id": 3, "nombre": "Odontología" },
+  { "id": 4, "nombre": "Ginecología" },
+  { "id": 5, "nombre": "Cardiología" },
+  { "id": 6, "nombre": "Dermatología" },
+  { "id": 7, "nombre": "Psiquiatría" },
+  { "id": 8, "nombre": "Oftalmología" },
+  { "id": 9, "nombre": "Traumatología" },
+  { "id": 10, "nombre": "Neurología" }
+]
+
+const DEFAULT_SEDES = [
+  { "id": 1, "nombre": "Sede Norte" },
+  { "id": 2, "nombre": "Sede Sur" },
+  { "id": 3, "nombre": "Sede Centro" },
+  { "id": 4, "nombre": "Sede Occidente" },
+  { "id": 5, "nombre": "Sede Oriente" },
+  { "id": 6, "nombre": "Sede Industrial" },
+  { "id": 7, "nombre": "Sede Comercial" },
+  { "id": 8, "nombre": "Sede Universitaria" },
+  { "id": 9, "nombre": "Sede Rural" },
+  { "id": 10, "nombre": "Sede Principal" }
+]
+
+
+const DEFAULT_ESTADOS = [
+  { id: 1, nombre: "Habilitado" },
+  { id: 2, nombre: "Mantenimiento" },
+  { id: 3, nombre: "Asignado" }
+];
+
 export default function EditConsultingRoom() {
   const router = useRouter();
   const params = useParams();
@@ -26,7 +60,7 @@ export default function EditConsultingRoom() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Estados para las opciones
+  // Inicializamos con arrays vacíos para evitar undefined
   const [tiposConsultorio, setTiposConsultorio] = useState<{ id: number, nombre: string }[]>([]);
   const [sedes, setSedes] = useState<{ id: number, nombre: string }[]>([]);
   const [estados, setEstados] = useState<{ id: number, nombre: string }[]>([]);
@@ -38,30 +72,75 @@ export default function EditConsultingRoom() {
       
       setLoading(true);
       try {
-        // Cargar datos en paralelo
-        const [consultorio, tiposData, sedesData, estadosData] = await Promise.all([
-          consultorioService.getConsultorioById(id),
-          consultorioService.getTiposConsultorio(),
-          consultorioService.getSedes(),
-          consultorioService.getEstados()
-        ]);
+        console.log("Cargando datos para el consultorio con ID:", id);
         
-        // Mapear los datos del consultorio a nuestro formulario
-        const tipoId = tiposData.find(t => t.nombre === consultorio.tipo)?.id || 0;
-        const sedeId = sedesData.find(s => s.nombre === consultorio.sede)?.id || 0;
-        const estadoId = estadosData.find(e => e.nombre === consultorio.estado)?.id || 1;
+        // Inicializamos variables con valores por defecto
+        let tiposData = DEFAULT_TIPOS_CONSULTORIO;
+        let sedesData = DEFAULT_SEDES;
+        let estadosData = DEFAULT_ESTADOS;
         
-        setFormData({
-          id: consultorio.id_consultorio,
-          numeroConsultorio: consultorio.numero_consultorio,
-          tipoConsultorio_id: tipoId,
-          sede_id: sedeId,
-          estado_id: estadoId
-        });
+        try {
+          const tiposResponse = await consultorioService.getTiposConsultorio();
+          if (tiposResponse && tiposResponse.length > 0) {
+            tiposData = tiposResponse;
+          }
+          console.log("Tipos de consultorio cargados:", tiposData);
+        } catch (e) {
+          console.error("Error al cargar tipos de consultorio:", e);
+        } finally {
+          // Siempre actualizar el estado con los datos, sean por defecto o de la API
+          setTiposConsultorio(tiposData);
+        }
         
-        setTiposConsultorio(tiposData);
-        setSedes(sedesData);
-        setEstados(estadosData);
+        try {
+          const sedesResponse = await consultorioService.getSedes();
+          if (sedesResponse && sedesResponse.length > 0) {
+            sedesData = sedesResponse;
+          }
+          console.log("Sedes cargadas:", sedesData);
+        } catch (e) {
+          console.error("Error al cargar sedes:", e);
+        } finally {
+          setSedes(sedesData);
+        }
+        
+        try {
+          const estadosResponse = await consultorioService.getEstados();
+          if (estadosResponse && estadosResponse.length > 0) {
+            estadosData = estadosResponse;
+          }
+          console.log("Estados cargados:", estadosData);
+        } catch (e) {
+          console.error("Error al cargar estados:", e);
+        } finally {
+          setEstados(estadosData);
+        }
+        
+        // Finalmente cargar el consultorio específico
+        try {
+          const consultorio = await consultorioService.getConsultorioById(id);
+          console.log("Datos del consultorio cargados:", consultorio);
+          
+          if (consultorio) {
+            // Mapear los datos del consultorio usando las listas cargadas (o por defecto)
+            const tipoId = tiposData.find(t => t.nombre === consultorio.tipo)?.id || 0;
+            const sedeId = sedesData.find(s => s.nombre === consultorio.sede)?.id || 0;
+            const estadoId = estadosData.find(e => e.nombre === consultorio.estado)?.id || 1;
+            
+            setFormData({
+              id: parseInt(consultorio.id_consultorio),
+              numeroConsultorio: consultorio.numero_consultorio,
+              tipoConsultorio_id: tipoId,
+              sede_id: sedeId,
+              estado_id: estadoId
+            });
+          } else {
+            throw new Error("No se encontró el consultorio");
+          }
+        } catch (e) {
+          console.error("Error al cargar consultorio:", e);
+          setError("No se pudo cargar la información del consultorio.");
+        }
       } catch (error) {
         console.error("Error cargando datos:", error);
         setError("No se pudo cargar la información del consultorio.");
@@ -98,7 +177,11 @@ export default function EditConsultingRoom() {
     setError(null);
     
     try {
-      await consultorioService.updateConsultorio(formData.id!, {
+      if (!formData.id) {
+        throw new Error("ID de consultorio no disponible");
+      }
+      
+      await consultorioService.updateConsultorio(formData.id, {
         numeroConsultorio: formData.numeroConsultorio,
         tipoConsultorio_id: formData.tipoConsultorio_id,
         sede_id: formData.sede_id,
@@ -111,9 +194,9 @@ export default function EditConsultingRoom() {
       setTimeout(() => {
         router.push("/list-consulting-room");
       }, 2000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al actualizar consultorio:", error);
-      setError("No se pudo actualizar el consultorio");
+      setError(error.message || "No se pudo actualizar el consultorio");
     } finally {
       setSaving(false);
     }
@@ -123,7 +206,8 @@ export default function EditConsultingRoom() {
     return (
       <AppLayout>
         <Card title="Editar Consultorio" titleClassName="text-xl">
-          <div className="p-6 text-center">
+          <div className="p-6 flex flex-col items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
             <p>Cargando datos del consultorio...</p>
           </div>
         </Card>
@@ -149,12 +233,16 @@ export default function EditConsultingRoom() {
           <Select
             label="Tipo de consultorio"
             name="tipoConsultorio_id"
-            value={formData.tipoConsultorio_id.toString()}
+            value={formData.tipoConsultorio_id?.toString() || ""}
             onChange={handleChange}
             required
+            options={tiposConsultorio.map(tipo => ({
+              value: tipo.id.toString(),
+              label: tipo.nombre
+            }))}
           >
             <option value="">Seleccione un tipo</option>
-            {tiposConsultorio.map(tipo => (
+            {tiposConsultorio?.map(tipo => (
               <option key={tipo.id} value={tipo.id.toString()}>
                 {tipo.nombre}
               </option>
@@ -164,12 +252,16 @@ export default function EditConsultingRoom() {
           <Select
             label="Sede"
             name="sede_id"
-            value={formData.sede_id.toString()}
+            value={formData.sede_id?.toString() || ""}
             onChange={handleChange}
             required
+            options={sedes.map(sede => ({
+              value: sede.id.toString(),
+              label: sede.nombre
+            }))}
           >
             <option value="">Seleccione una sede</option>
-            {sedes.map(sede => (
+            {sedes?.map(sede => (
               <option key={sede.id} value={sede.id.toString()}>
                 {sede.nombre}
               </option>
@@ -179,12 +271,16 @@ export default function EditConsultingRoom() {
           <Select
             label="Estado"
             name="estado_id"
-            value={formData.estado_id.toString()}
+            value={formData.estado_id?.toString() || ""}
             onChange={handleChange}
             required
+            options={estados.map(estado => ({
+              value: estado.id.toString(),
+              label: estado.nombre
+            }))}
           >
             <option value="">Seleccione un estado</option>
-            {estados.map(estado => (
+            {estados?.map(estado => (
               <option key={estado.id} value={estado.id.toString()}>
                 {estado.nombre}
               </option>
