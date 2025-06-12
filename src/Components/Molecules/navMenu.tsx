@@ -1,6 +1,8 @@
+import React from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Card from "./card"
+import { usePathname } from "next/navigation"
 
 interface NavItemProps {
   href: string
@@ -19,10 +21,10 @@ const NavItem = ({ href, label, active, onClick }: NavItemProps) => {
           onClick()
         }}
         className={cn(
-          "block px-4 py-2 rounded-md",
+          "block px-4 py-2 rounded-md transition-colors",
           active
-            ? "bg-[var(--color-primary-50)] text-[var(--color-primary-900)]"
-            : "hover:bg-[var(--color-primary-50)]"
+            ? "bg-[var(--color-primary-50)] text-[var(--color-primary-900)] font-semibold"
+            : "hover:bg-[var(--color-primary-50)] text-gray-700"
         )}
       >
         {label}
@@ -31,49 +33,39 @@ const NavItem = ({ href, label, active, onClick }: NavItemProps) => {
   )
 }
 
-interface NavMenuProps {
-  userRole: string
-}
-
-export default function NavMenu({ userRole }: NavMenuProps) {
+export default function NavMenu() {
   const router = useRouter()
-  const currentPath = window.location.pathname
+  // Usar usePathname en lugar de window.location para compatibilidad con SSR
+  const currentPath = usePathname()
 
-  const getMenuItems = () => {
-    // Elementos comunes para todos los roles
+  // Opciones de navegación fijas (sin roles)
+  const menuItems = [
+    { label: "Dashboard", href: "/list-consulting-room" },
+    { label: "Registro consultorio", href: "/register-consulting-room" },
+    { label: "Consultorios no operativos", href: "/manage-inactive-rooms" },
+    { label: "Mantenimientos programados", href: "/maintenance-schedule" },
+  ]
 
-    switch (userRole) {
-      case "administrator":
-        return [
-          { label: "Dashboard", href: "/list-consulting-room" },
-          { label: "Registro consultorio", href: "/register-consulting-room" },
-          { label: "Consultorios no operativos", href: "/manage-inactive-rooms" },
-          { label: "Mantenimientos programados", href: "/maintenance-schedule" },
-        ]
-      case "coordinator":
-        return [
-
-          { label: "Asignación de consultorios", href: "/assign-consulting-room" },
-          { label: "Programación de especialidades", href: "/specialty-schedule" },
-        ]
-      case "doctor":
-        return [
-
-          { label: "Mi consultorio", href: "/my-consulting-room" },
-          { label: "Horario de atención", href: "/attention-schedule" },
-        ]
-      default:
-        return [
-          { label: "Mi consultorio", href: "/my-consulting-room" },
-          { label: "Horario de atención", href: "/attention-schedule" },
-        ]
-    }
+  // Navegación mejorada
+  const handleClick = (href: string) => {
+    // Evitar navegación si ya estamos en la página
+    if (currentPath === href) return
+    router.push(href)
   }
 
-  const menuItems = getMenuItems()
+  // Función para determinar si una ruta está activa (incluyendo rutas anidadas)
+  const isRouteActive = (href: string) => {
+    if (href === currentPath) return true
 
-  const handleClick = (href: string) => {
-    router.push(href)
+    // Caso especial para edición de consultorios
+    if (
+      href === "/list-consulting-room" &&
+      currentPath?.startsWith("/edit-consulting-room/")
+    ) {
+      return true
+    }
+
+    return false
   }
 
   return (
@@ -85,7 +77,7 @@ export default function NavMenu({ userRole }: NavMenuProps) {
               key={item.href}
               href={item.href}
               label={item.label}
-              active={currentPath === item.href}
+              active={isRouteActive(item.href)}
               onClick={() => handleClick(item.href)}
             />
           ))}
