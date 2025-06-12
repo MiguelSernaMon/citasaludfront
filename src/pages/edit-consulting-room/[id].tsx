@@ -128,7 +128,7 @@ export default function EditConsultingRoom() {
             const estadoId = estadosData.find(e => e.nombre === consultorio.estado)?.id || 1;
             
             setFormData({
-              id: parseInt(consultorio.id_consultorio),
+              id: consultorio.id_consultorio,
               numeroConsultorio: consultorio.numero_consultorio,
               tipoConsultorio_id: tipoId,
               sede_id: sedeId,
@@ -180,23 +180,31 @@ export default function EditConsultingRoom() {
       if (!formData.id) {
         throw new Error("ID de consultorio no disponible");
       }
-      
+
       await consultorioService.updateConsultorio(formData.id, {
         numeroConsultorio: formData.numeroConsultorio,
         tipoConsultorio_id: formData.tipoConsultorio_id,
         sede_id: formData.sede_id,
-        estado_id: formData.estado_id
+        estado_id: formData.estado_id,
       });
-      
+
       setSuccess("Consultorio actualizado correctamente");
-      
+
       // Redirigir después de 2 segundos
       setTimeout(() => {
         router.push("/list-consulting-room");
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al actualizar consultorio:", error);
-      setError(error.message || "No se pudo actualizar el consultorio");
+
+      // Forma segura de manejar el error cuando es de tipo desconocido
+      if (error instanceof Error) {
+        setError(error.message);
+      } else if (typeof error === "string") {
+        setError(error);
+      } else {
+        setError("No se pudo actualizar el consultorio");
+      }
     } finally {
       setSaving(false);
     }
