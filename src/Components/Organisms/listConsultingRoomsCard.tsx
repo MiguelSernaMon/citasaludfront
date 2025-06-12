@@ -109,7 +109,7 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
         {/* Botón para ver asignación solo para consultorios asignados */}
         {isAssigned(consultingRoom.availability) && (
           <Button 
-            variant="warning" 
+            variant="ghost" 
             size="sm" 
             onClick={() => onModify(consultingRoom.id)}
             className="bg-amber-500 hover:bg-amber-600 text-white"
