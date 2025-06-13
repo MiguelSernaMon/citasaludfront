@@ -20,7 +20,7 @@ function LoginForm() {
   // Redirigir si ya está autenticado
   useEffect(() => {
     if (authState.user && !authState.loading) {
-      router.push("/dashboard")
+      router.push("/list-consulting-room")
     }
   }, [authState.user, authState.loading, router])
 
@@ -42,7 +42,7 @@ function LoginForm() {
     })
     
     if (success) {
-      router.push("/dashboard")
+      router.push("/list-consulting-room")
     }
   }
 

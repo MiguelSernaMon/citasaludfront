@@ -6,14 +6,15 @@ import Button from "@/Components/Atoms/button"
 import ListConsultingRoomCard from "@/Components/Organisms/listConsultingRoomsCard"
 import { consultorioService, ConsultorioResponseDTO } from "@/services/consultorioService"
 import NotificationMessage from "@/Components/Molecules/notificationMessage"
-import Input  from "@/Components/Atoms/input"
+import Input from "@/Components/Atoms/input"
 import { Search, RefreshCw, X, Filter } from "lucide-react"
 
-// Interfaz para el filtro
+// Interfaz para el filtro (actualizada para incluir estado)
 interface FilterState {
   search: string;
   sede: string;
   especialidad: string;
+  estado: string; // Nuevo filtro para estados
 }
 
 export default function ListConsultingRoom() {
@@ -23,11 +24,12 @@ export default function ListConsultingRoom() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Estado para filtros
+  // Estado para filtros (actualizado con estado)
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     sede: "",
-    especialidad: ""
+    especialidad: "",
+    estado: "" // Valor inicial para el filtro de estado
   });
   
   // Estado para mostrar/ocultar panel de filtros
@@ -82,12 +84,13 @@ export default function ListConsultingRoom() {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
   
-  // Función para limpiar los filtros
+  // Función para limpiar los filtros (actualizada con estado)
   const clearFilters = () => {
     setFilters({
       search: "",
       sede: "",
-      especialidad: ""
+      especialidad: "",
+      estado: ""
     });
   };
 
@@ -101,7 +104,7 @@ export default function ListConsultingRoom() {
     });
     return Array.from(sedes).sort();
   }, [consultingRooms]);
-  
+
   // Obtener las especialidades únicas para el filtro
   const uniqueEspecialidades = useMemo(() => {
     const especialidades = new Set<string>();
@@ -112,8 +115,19 @@ export default function ListConsultingRoom() {
     });
     return Array.from(especialidades).sort();
   }, [consultingRooms]);
+  
+  // Obtener los estados únicos para el filtro
+  const uniqueEstados = useMemo(() => {
+    const estados = new Set<string>();
+    consultingRooms.forEach(room => {
+      if (room.estado) {
+        estados.add(room.estado);
+      }
+    });
+    return Array.from(estados).sort();
+  }, [consultingRooms]);
 
-  // Filtrar los consultorios según los criterios
+  // Filtrar los consultorios según los criterios (actualizado con estado)
   const filteredConsultingRooms = useMemo(() => {
     return consultingRooms.filter(room => {
       // Filtro de búsqueda (por número)
@@ -126,7 +140,11 @@ export default function ListConsultingRoom() {
       // Filtro por especialidad
       const matchEspecialidad = filters.especialidad === "" || room.tipo === filters.especialidad;
       
-      return matchSearch && matchSede && matchEspecialidad;
+      // Filtro por estado
+      const matchEstado = filters.estado === "" || room.estado === filters.estado;
+      
+      // Debe cumplir todos los criterios de filtrado
+      return matchSearch && matchSede && matchEspecialidad && matchEstado;
     });
   }, [consultingRooms, filters]);
 
@@ -184,7 +202,7 @@ export default function ListConsultingRoom() {
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 {/* Búsqueda por nombre */}
-                <div className="w-full sm:w-1/3">
+                <div className="w-full sm:w-1/4">
                   <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
                     Buscar por número
                   </label>
@@ -205,7 +223,7 @@ export default function ListConsultingRoom() {
                 </div>
                 
                 {/* Filtro por sede */}
-                <div className="w-full sm:w-1/3">
+                <div className="w-full sm:w-1/4">
                   <label htmlFor="sede" className="block text-sm font-medium text-gray-700 mb-1">
                     Sede
                   </label>
@@ -226,7 +244,7 @@ export default function ListConsultingRoom() {
                 </div>
                 
                 {/* Filtro por especialidad */}
-                <div className="w-full sm:w-1/3">
+                <div className="w-full sm:w-1/4">
                   <label htmlFor="especialidad" className="block text-sm font-medium text-gray-700 mb-1">
                     Especialidad
                   </label>
@@ -246,6 +264,27 @@ export default function ListConsultingRoom() {
                   </select>
                 </div>
                 
+                {/* Nuevo filtro por estado */}
+                <div className="w-full sm:w-1/4">
+                  <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado
+                  </label>
+                  <select
+                    id="estado"
+                    name="estado"
+                    value={filters.estado}
+                    onChange={handleFilterChange}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    <option value="">Todos los estados</option>
+                    {uniqueEstados.map(estado => (
+                      <option key={estado} value={estado}>
+                        {estado}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
                 {/* Botón para limpiar filtros */}
                 <Button 
                   variant="ghost" 
@@ -259,8 +298,8 @@ export default function ListConsultingRoom() {
               </div>
               
               {/* Mostrar resumen del filtro activo */}
-              {(filters.search || filters.sede || filters.especialidad) && (
-                <div className="mt-3 flex items-center text-sm text-gray-500">
+              {(filters.search || filters.sede || filters.especialidad || filters.estado) && (
+                <div className="mt-3 flex flex-wrap items-center text-sm text-gray-500">
                   <span className="font-medium mr-1">Filtros activos:</span>
                   {filters.search && (
                     <span className="bg-blue-100 text-blue-800 py-0.5 px-2 rounded-full mr-2 text-xs">
@@ -277,15 +316,21 @@ export default function ListConsultingRoom() {
                       Especialidad: {filters.especialidad}
                     </span>
                   )}
+                  {filters.estado && (
+                    <span className="bg-amber-100 text-amber-800 py-0.5 px-2 rounded-full mr-2 text-xs">
+                      Estado: {filters.estado}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           )}
+
           
           {/* Resumen de resultados */}
           <div className="text-sm text-gray-500">
             Mostrando {filteredConsultingRooms.length} de {consultingRooms.length} consultorios
-            {(filters.search || filters.sede || filters.especialidad) ? " (filtrados)" : ""}
+            {(filters.search || filters.sede || filters.especialidad || filters.estado) ? " (filtrados)" : ""}
           </div>
           
           {/* Lista de consultorios */}
@@ -318,9 +363,9 @@ export default function ListConsultingRoom() {
               </p>
               {consultingRooms.length === 0 && (
                 <Button 
-                  variant="ghost" // Cambiando "link" por "ghost" que es una de las variantes permitidas
+                  variant="ghost"
                   onClick={() => router.push("/register-consulting-room")}
-                  className="mt-2 text-blue-600 hover:text-blue-800 underline" // Añadimos estos estilos para que se parezca a un link
+                  className="mt-2 text-blue-600 hover:text-blue-800 underline"
                 >
                   ¿Desea agregar un nuevo consultorio?
                 </Button>
