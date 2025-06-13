@@ -36,10 +36,7 @@ const isAssigned = (status: string): boolean => {
   return status.toLowerCase() === "asignado";
 };
 
-// Función auxiliar para determinar si un consultorio está habilitado
-const isEnabled = (status: string): boolean => {
-  return status.toLowerCase() === "habilitado";
-};
+
 
 // Función para determinar si se puede programar mantenimiento (habilitado o asignado)
 const canScheduleMaintenance = (status: string): boolean => {
@@ -134,7 +131,7 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
         {/* Botón para ver asignación solo para consultorios asignados */}
         {isAssigned(consultingRoom.availability) && (
           <Button 
-            variant="warning" 
+            variant="ghost" 
             size="sm" 
             onClick={() => onModify(consultingRoom.id)}
             className="bg-amber-500 hover:bg-amber-600 text-white"

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Button from "@/Components/Atoms/button";
-import Input from "@/Components/Atoms/input";
 import { X } from "lucide-react";
 import { mantenimientoService, MantenimientoDto } from "@/services/mantenimientoService";
 
@@ -106,9 +105,8 @@ const MaintenanceScheduleModal: React.FC<MaintenanceScheduleModalProps> = ({
       
       onSuccess();
       onClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error al programar mantenimiento:", error);
-      setError(error.message || "No se pudo programar el mantenimiento. Intente de nuevo.");
     } finally {
       setIsSubmitting(false);
     }

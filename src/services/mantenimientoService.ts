@@ -22,7 +22,7 @@ export const mantenimientoService = {
   /**
    * Programar un nuevo mantenimiento
    */
-  programarMantenimiento: async (data: MantenimientoDto): Promise<ApiResponse<any>> => {
+  programarMantenimiento: async (data: MantenimientoDto): Promise<ApiResponse<unknown>> => {
     try {
       // Asegurarse de que las fechas estén en el formato correcto para Java Spring
       // Spring espera: "yyyy-MM-dd'T'HH:mm:ss"
@@ -62,7 +62,7 @@ export const mantenimientoService = {
           data: json,
           message: 'Mantenimiento programado correctamente'
         };
-      } catch (e) {
+      } catch{
         // Si no es JSON, devolver el texto como mensaje
         return {
           success: true,
@@ -78,7 +78,7 @@ export const mantenimientoService = {
   /**
    * Obtener todos los mantenimientos programados
    */
-  getMantenimientos: async (): Promise<any[]> => {
+  getMantenimientos: async (): Promise<unknown[]> => {
     try {
       const response = await fetch(`${BASE_URL}/mantenimiento`, {
         headers: {
@@ -100,7 +100,7 @@ export const mantenimientoService = {
   /**
    * Obtener mantenimientos por ID de consultorio
    */
-  getMantenimientosByConsultorio: async (consultorioId: number): Promise<any[]> => {
+  getMantenimientosByConsultorio: async (consultorioId: number): Promise<unknown[]> => {
     try {
       const response = await fetch(`${BASE_URL}/mantenimiento/consultorio/${consultorioId}`, {
         headers: {
