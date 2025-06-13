@@ -146,21 +146,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     console.log("Intentando conectar al WebSocket...")
     setConnectionStatus("connecting")
-    
-    // Agregar notificación de prueba al inicio para verificar que el sistema funciona
-    // Pero solo la primera vez, con un pequeño retraso
-    // const timeoutId = setTimeout(() => {
-    //   addTestNotification();
-    // }, 2000);
-    
-    // Evitar conexiones múltiples - verificar si ya tenemos un cliente
-    // if (clientRef.current) {
-    //   console.log("Ya existe una conexión WebSocket, reutilizando");
-    //   return () => {
-    //     clearTimeout(timeoutId);
-    //   };
-    // }
-    
     try {
       // Configurar conexión WebSocket con opciones CORS
       const client = new Client({
