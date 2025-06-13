@@ -8,13 +8,14 @@ import { consultorioService, ConsultorioResponseDTO } from "@/services/consultor
 import NotificationMessage from "@/Components/Molecules/notificationMessage"
 import Input from "@/Components/Atoms/input"
 import { Search, RefreshCw, X, Filter } from "lucide-react"
+import MaintenanceScheduleModal from "@/Components/Molecules/maintenanceScheduleModal"
 
-// Interfaz para el filtro (actualizada para incluir estado)
+// Interfaz para el filtro
 interface FilterState {
   search: string;
   sede: string;
   especialidad: string;
-  estado: string; // Nuevo filtro para estados
+  estado: string;
 }
 
 export default function ListConsultingRoom() {
@@ -24,16 +25,23 @@ export default function ListConsultingRoom() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // Estado para filtros (actualizado con estado)
+  // Estado para filtros
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     sede: "",
     especialidad: "",
-    estado: "" // Valor inicial para el filtro de estado
+    estado: ""
   });
   
   // Estado para mostrar/ocultar panel de filtros
   const [showFilters, setShowFilters] = useState(false);
+
+  // Estado para el modal de mantenimiento
+  const [showMaintenanceModal, setShowMaintenanceModal] = useState(false);
+  const [selectedConsultorio, setSelectedConsultorio] = useState<{
+    id: string;
+    numero: string;
+  } | null>(null);
 
   // Cargar los consultorios al montar el componente
   useEffect(() => {
@@ -54,18 +62,18 @@ export default function ListConsultingRoom() {
     }
   };
 
-  const handleModify = (id: number) => {
+  const handleModify = (id: string) => {
     router.push(`/edit-consulting-room/${id}`);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (confirm("¿Está seguro de que desea eliminar este consultorio?")) {
       try {
-        await consultorioService.deleteConsultorio(id);
+        await consultorioService.deleteConsultorio(parseInt(id));
         setSuccess("Consultorio eliminado correctamente");
         
         // Actualizar la lista de consultorios
-        setConsultingRooms(prev => prev.filter(room => room.id_consultorio !== id));
+        setConsultingRooms(prev => prev.filter(room => room.id_consultorio.toString() !== id));
         
         // Limpiar el mensaje de éxito después de 3 segundos
         setTimeout(() => {
@@ -77,6 +85,29 @@ export default function ListConsultingRoom() {
       }
     }
   };
+
+  // Manejador para abrir el modal de programación de mantenimiento
+  const handleScheduleMaintenance = (id: string) => {
+    const consultorio = consultingRooms.find(room => room.id_consultorio.toString() === id);
+    if (consultorio) {
+      setSelectedConsultorio({
+        id: consultorio.id_consultorio.toString(),
+        numero: consultorio.numero_consultorio
+      });
+      setShowMaintenanceModal(true);
+    }
+  };
+  
+  const handleMaintenanceSuccess = () => {
+    setSuccess("Mantenimiento programado correctamente");
+    // Recargar datos para reflejar cambios (si el backend actualiza el estado)
+    loadConsultingRooms();
+    
+    // Limpiar mensaje después de 3 segundos
+    setTimeout(() => {
+      setSuccess(null);
+    }, 3000);
+  };
   
   // Función para actualizar los filtros
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -84,7 +115,7 @@ export default function ListConsultingRoom() {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
   
-  // Función para limpiar los filtros (actualizada con estado)
+  // Función para limpiar los filtros
   const clearFilters = () => {
     setFilters({
       search: "",
@@ -127,7 +158,7 @@ export default function ListConsultingRoom() {
     return Array.from(estados).sort();
   }, [consultingRooms]);
 
-  // Filtrar los consultorios según los criterios (actualizado con estado)
+  // Filtrar los consultorios según los criterios
   const filteredConsultingRooms = useMemo(() => {
     return consultingRooms.filter(room => {
       // Filtro de búsqueda (por número)
@@ -264,7 +295,7 @@ export default function ListConsultingRoom() {
                   </select>
                 </div>
                 
-                {/* Nuevo filtro por estado */}
+                {/* Filtro por estado */}
                 <div className="w-full sm:w-1/4">
                   <label htmlFor="estado" className="block text-sm font-medium text-gray-700 mb-1">
                     Estado
@@ -345,8 +376,9 @@ export default function ListConsultingRoom() {
                 <ListConsultingRoomCard
                   key={consultorio.id_consultorio}
                   consultingRoom={mapConsultorio(consultorio)}
-                  onModify={() => handleModify(consultorio.id_consultorio)}
-                  onDelete={() => handleDelete(consultorio.id_consultorio)}
+                  onModify={() => handleModify(consultorio.id_consultorio.toString())}
+                  onDelete={() => handleDelete(consultorio.id_consultorio.toString())}
+                  onScheduleMaintenance={handleScheduleMaintenance}
                   className="hover:shadow-md transition-shadow duration-200"
                 />
               ))}
@@ -374,6 +406,19 @@ export default function ListConsultingRoom() {
           )}
         </div>
       </Card>
+      
+      {/* Modal de programación de mantenimiento */}
+      {showMaintenanceModal && selectedConsultorio && (
+        <MaintenanceScheduleModal
+          consultorioId={selectedConsultorio.id}
+          consultorioNumero={selectedConsultorio.numero}
+          onClose={() => {
+            setShowMaintenanceModal(false);
+            setSelectedConsultorio(null);
+          }}
+          onSuccess={handleMaintenanceSuccess}
+        />
+      )}
     </AppLayout>
   );
 }

@@ -36,10 +36,22 @@ const isAssigned = (status: string): boolean => {
   return status.toLowerCase() === "asignado";
 };
 
+// Función auxiliar para determinar si un consultorio está habilitado
+const isEnabled = (status: string): boolean => {
+  return status.toLowerCase() === "habilitado";
+};
+
+// Función para determinar si se puede programar mantenimiento (habilitado o asignado)
+const canScheduleMaintenance = (status: string): boolean => {
+  const statusLower = status.toLowerCase();
+  return statusLower === "habilitado" || statusLower === "asignado";
+};
+
 interface ListConsultingRoomCardProps {
   consultingRoom: ConsultingRoom
   onModify: (id: string) => void
   onDelete: (id: string) => void
+  onScheduleMaintenance?: (id: string) => void
   className?: string
 }
 
@@ -47,6 +59,7 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
   consultingRoom,
   onModify,
   onDelete,
+  onScheduleMaintenance,
   className,
 }) => {
   // Obtener la variante según el estado
@@ -86,6 +99,18 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
       </div>
 
       <div className="flex justify-end gap-2">
+        {/* Botón para programar mantenimiento (solo para habilitados o asignados) */}
+        {canScheduleMaintenance(consultingRoom.availability) && onScheduleMaintenance && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="border-amber-500 text-amber-600 hover:bg-amber-50"
+            onClick={() => onScheduleMaintenance(consultingRoom.id)}
+          >
+            Programar Mantenimiento
+          </Button>
+        )}
+        
         {/* Botón de modificar siempre visible */}
         <Button 
           variant="outline" 
@@ -109,7 +134,7 @@ const ListConsultionRoomCard: FC<ListConsultingRoomCardProps> = ({
         {/* Botón para ver asignación solo para consultorios asignados */}
         {isAssigned(consultingRoom.availability) && (
           <Button 
-            variant="ghost" 
+            variant="warning" 
             size="sm" 
             onClick={() => onModify(consultingRoom.id)}
             className="bg-amber-500 hover:bg-amber-600 text-white"
