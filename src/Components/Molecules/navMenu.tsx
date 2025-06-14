@@ -1,8 +1,7 @@
-import React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Card from "./card"
-import { usePathname } from "next/navigation"
+import { FC } from "react"
 
 interface NavItemProps {
   href: string
@@ -11,7 +10,7 @@ interface NavItemProps {
   onClick: () => void
 }
 
-const NavItem = ({ href, label, active, onClick }: NavItemProps) => {
+const NavItem: FC<NavItemProps> = ({ href, label, active, onClick }) => {
   return (
     <li>
       <a
@@ -23,8 +22,8 @@ const NavItem = ({ href, label, active, onClick }: NavItemProps) => {
         className={cn(
           "block px-4 py-2 rounded-md transition-colors",
           active
-            ? "bg-[var(--color-primary-50)] text-[var(--color-primary-900)] font-semibold"
-            : "hover:bg-[var(--color-primary-50)] text-gray-700"
+            ? "bg-[var(--color-primary-50)] text-[var(--color-primary-900)] font-medium"
+            : "hover:bg-[var(--color-primary-50)]"
         )}
       >
         {label}
@@ -38,12 +37,11 @@ export default function NavMenu() {
   // Usar usePathname en lugar de window.location para compatibilidad con SSR
   const currentPath = usePathname()
 
-  // Opciones de navegación fijas (sin roles)
+  // Opciones de navegación fijas (sin roles) - Eliminada la opción de "Mantenimientos programados"
   const menuItems = [
     { label: "Dashboard", href: "/list-consulting-room" },
     { label: "Registro consultorio", href: "/register-consulting-room" },
-    { label: "Consultorios no operativos", href: "/manage-inactive-rooms" },
-    { label: "Mantenimientos programados", href: "/maintenance-schedule" },
+    // Se elimina la opción "Mantenimientos programados"
   ]
 
   // Navegación mejorada
