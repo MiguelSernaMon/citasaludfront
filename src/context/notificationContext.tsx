@@ -128,7 +128,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const client = new Client({
         webSocketFactory: () => {
           console.log("[DEBUG] Creando SockJS con URL http://localhost:8080/ws-mantenimiento");
-          return new SockJS("https://maintenance-alerts-service.onrender.com/ws-mantenimiento");
+          return new SockJS("http://localhost:8080/ws-mantenimiento");
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
@@ -140,7 +140,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           connectAttemptRef.current = 0;
 
           console.log("[DEBUG] Suscribiendo a /topic/notificaciones/123");
-          client.subscribe("/topic/notificaciones/1", (message) => {
+          client.subscribe("/topic/notificaciones", (message) => {
             console.log("[DEBUG] Mensaje recibido en /topic/notificaciones/123:", message);
             try {
               const kafkaMessage = JSON.parse(message.body) as KafkaMessage;
