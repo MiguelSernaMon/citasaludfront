@@ -9,7 +9,6 @@ interface Notification {
   message: string
   timestamp: string
   type: string
-  // Agregamos un hash para detectar duplicados
   contentHash?: string
 }
 
@@ -39,55 +38,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [connectionStatus, setConnectionStatus] = useState<string>("disconnected")
   
-  // Usamos useRef para asegurarnos de que solo creamos una conexión WebSocket
   const clientRef = useRef<Client | null>(null)
-  
-  // Usamos otro ref para rastrear las notificaciones procesadas recientemente
   const processedNotifications = useRef<Set<string>>(new Set())
+  const connectAttemptRef = useRef<number>(0)
+  const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null)
   
-  // Generar un hash simple para el contenido del mensaje (para detectar duplicados)
   const generateContentHash = (message: string, timestamp: number): string => {
-    return `${message}-${Math.floor(timestamp / 10000)}` // Agrupar por franjas de 10 segundos
+    return `${message}-${Math.floor(timestamp / 10000)}`
   }
 
-  // Función para agregar una notificación de prueba
-  // const addTestNotification = () => {
-  //   console.log("Agregando notificación de prueba")
-  //   const now = Date.now()
-  //   const message = "Esta es una notificación de prueba"
-  //   const contentHash = generateContentHash(message, now)
-    
-  //   // Verificar si ya procesamos una notificación similar recientemente
-  //   if (processedNotifications.current.has(contentHash)) {
-  //     console.log("Notificación duplicada detectada y omitida:", contentHash)
-  //     return
-  //   }
-    
-  //   // Marcar esta notificación como procesada
-  //   processedNotifications.current.add(contentHash)
-    
-  //   // Eliminar notificaciones antiguas del registro (más de 30 segundos)
-  //   setTimeout(() => {
-  //     processedNotifications.current.delete(contentHash)
-  //   }, 30000)
-    
-  //   setNotifications((prev) => [
-  //     {
-  //       id: `${now}-${Math.random().toString(36).substring(2, 9)}`, // ID verdaderamente único
-  //       message: message,
-  //       timestamp: new Date().toISOString(),
-  //       type: "info",
-  //       contentHash
-  //     },
-  //     ...prev
-  //   ])
-  // }
-
-  // Función para formatear una fecha desde el array [año, mes, día, hora, minuto]
   const formatDate = (dateArray: number[]) => {
     if (!dateArray || dateArray.length < 5) return "Fecha no disponible";
     
-    // Nota: En JavaScript los meses van de 0-11, mientras que en el array vienen 1-12
     const [year, month, day, hour, minute] = dateArray;
     const date = new Date(year, month-1, day, hour, minute);
     return date.toLocaleString('es-ES', { 
@@ -99,7 +61,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Función para convertir un mensaje Kafka a una notificación
   const kafkaMessageToNotification = (kafkaMessage: KafkaMessage): Notification => {
     const fechaInicio = formatDate(kafkaMessage.fechaInicio);
     const fechaFin = formatDate(kafkaMessage.fechaFin);
@@ -116,9 +77,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   };
   
-  // Función para procesar y agregar una notificación evitando duplicados
   const addNotification = (notification: Notification) => {
-    // Si la notificación no tiene un hash de contenido, generarlo
     if (!notification.contentHash) {
       notification.contentHash = generateContentHash(
         notification.message, 
@@ -126,16 +85,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       );
     }
     
-    // Verificar si ya procesamos una notificación similar recientemente
     if (processedNotifications.current.has(notification.contentHash)) {
       console.log("Notificación duplicada detectada y omitida:", notification.contentHash);
       return;
     }
     
-    // Marcar esta notificación como procesada
     processedNotifications.current.add(notification.contentHash);
     
-    // Limpiar el registro después de un tiempo
     setTimeout(() => {
       processedNotifications.current.delete(notification.contentHash as string);
     }, 30000);
@@ -143,133 +99,136 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(prev => [notification, ...prev]);
   }
 
-  useEffect(() => {
-    console.log("Intentando conectar al WebSocket...")
-    setConnectionStatus("connecting")
+  const setupStompClient = () => {
+    if (clientRef.current && clientRef.current.active) {
+      return;
+    }
+
+    // Si hay demasiados intentos, esperar más tiempo antes de reintentar
+    if (connectAttemptRef.current > 5) {
+      console.log("[DEBUG] Demasiados intentos, esperando 30 segundos antes de reintentar");
+      setConnectionStatus("waiting");
+      
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+      
+      reconnectTimerRef.current = setTimeout(() => {
+        connectAttemptRef.current = 0;
+        setConnectionStatus("disconnected");
+      }, 30000);
+      
+      return;
+    }
+
+    connectAttemptRef.current += 1;
+    console.log(`[DEBUG] Intento de conexión #${connectAttemptRef.current}`);
+    
     try {
-      // Configurar conexión WebSocket con opciones CORS
       const client = new Client({
         webSocketFactory: () => {
-          const socket = new SockJS("https://maintenance-alerts-service.onrender.com/ws-mantenimiento", [], {
-            transports: ['websocket', 'xhr-streaming', 'xhr-polling']
-          });
-          return socket;
+          console.log("[DEBUG] Creando SockJS con URL http://localhost:8080/ws-mantenimiento");
+          return new SockJS("https://maintenance-alerts-service.onrender.com/ws-mantenimiento");
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
         heartbeatOutgoing: 4000,
-        onConnect: () => {
-          console.log("Conectado al servidor WebSocket")
-          setConnectionStatus("connected")
-          
-          // Suscribirse al tema de notificaciones de mantenimiento
-          client.subscribe("/topic/notificaciones/123", (message) => {
-            console.log("Mensaje recibido:", message)
+        debug: (msg) => console.log("[DEBUG STOMP]", msg),
+        onConnect: (frame) => {
+          console.log("[DEBUG] STOMP conectado con frame:", frame);
+          setConnectionStatus("connected");
+          connectAttemptRef.current = 0;
+
+          console.log("[DEBUG] Suscribiendo a /topic/notificaciones/123");
+          client.subscribe("/topic/notificaciones/1", (message) => {
+            console.log("[DEBUG] Mensaje recibido en /topic/notificaciones/123:", message);
             try {
-              console.log("Contenido del mensaje:", message.body);
-              
               const kafkaMessage = JSON.parse(message.body) as KafkaMessage;
-              console.log("Mensaje Kafka parseado:", kafkaMessage);
-              
-              // Procesar el mensaje específico de Kafka
+              console.log("[DEBUG] KafkaMessage parseado:", kafkaMessage);
               const notification = kafkaMessageToNotification(kafkaMessage);
-              console.log("Notificación generada:", notification);
-              
+              console.log("[DEBUG] Notificación creada:", notification);
               addNotification(notification);
             } catch (error) {
-              console.error("Error al procesar la notificación:", error)
-              
-              // Intentar usar el mensaje crudo como notificación
-              const now = Date.now();
-              const notificationMessage = `Nuevo mantenimiento: ${message.body}`;
-              const contentHash = generateContentHash(notificationMessage, now);
-              
-              addNotification({
-                id: `${now}-${Math.random().toString(36).substring(2, 9)}`,
-                message: notificationMessage,
-                timestamp: new Date().toISOString(),
-                type: "info",
-                contentHash
-              });
+              console.error("[DEBUG] Error al parsear el mensaje de Kafka:", error);
             }
-          })
-          
-          // También suscribirse a otros posibles tópicos
+          });
+
+          console.log("[DEBUG] Suscribiendo también a /topic/alerts");
           client.subscribe("/topic/alerts", (message) => {
+            console.log("[DEBUG] Alerta recibida:", message.body);
             try {
-              const notification = JSON.parse(message.body)
+              const notification = JSON.parse(message.body);
               const now = Date.now();
               const msg = notification.message || "Nueva alerta recibida";
               const contentHash = generateContentHash(msg, now);
-              
-              addNotification({
+              addNotification({ 
                 id: `${now}-${Math.random().toString(36).substring(2, 9)}`,
                 message: msg,
-                timestamp: new Date().toISOString(),
+                timestamp: new Date().toISOString(), 
                 type: notification.type || "info",
                 contentHash
               });
             } catch (error) {
-              console.error("Error al procesar la alerta:", error)
+              console.error("[DEBUG] Error al parsear la alerta:", error);
             }
-          })
-        },
-        onStompError: (frame) => {
-          console.error("Error STOMP:", frame)
-          setConnectionStatus("error")
+          });
         },
         onWebSocketError: (event) => {
-          console.error("Error en WebSocket:", event)
-          setConnectionStatus("error")
-          
-          // Solo mostrar notificación de error si no hay conexión activa
-          // if (connectionStatus !== "connected") {
-          //   // Agregar notificación de error para ver si el componente funciona
-          //   setTimeout(() => {
-          //     addTestNotification();
-          //   }, 1000);
-          // }
+          console.error("[DEBUG] Error en WebSocket:", event);
+          setConnectionStatus("error");
         },
-        onWebSocketClose: () => {
-          console.log("WebSocket cerrado")
-          setConnectionStatus("disconnected")
-          // Limpiar la referencia cuando la conexión se cierre
+        onWebSocketClose: (event) => {
+          console.warn("[DEBUG] WebSocket cerrado:", event);
           clientRef.current = null;
+        },
+        onStompError: (frame) => {
+          console.error("[DEBUG] Error STOMP:", frame);
+          setConnectionStatus("error");
         }
-      })
+      });
 
-      // Guardar referencia al cliente para evitar conexiones duplicadas
       clientRef.current = client;
-      
-      // Iniciar conexión
-      client.activate()
-
-      // Limpiar al desmontar
-      return () => {
-        // clearTimeout(timeoutId);
-        if (client && client.connected) {
-          console.log("Desactivando cliente WebSocket existente");
-          client.deactivate()
-        }
-        clientRef.current = null;
-      }
+      console.log("[DEBUG] Activando STOMP.");
+      client.activate();
     } catch (error) {
-      console.error("Error al configurar WebSocket:", error)
-      setConnectionStatus("error")
-      
-      // Solo mostrar notificación de error si no hay conexión activa
-      if (connectionStatus !== "connected") {
-        // Agregar notificación de error para ver si el componente funciona
-        setTimeout(() => {
-          // addTestNotification();
-        }, 1000);
+      console.error("[DEBUG] Excepción al preparar STOMP:", error);
+      setConnectionStatus("error");
+    }
+  };
+
+  useEffect(() => {
+    console.log("[DEBUG] Intentando preparar WebSocket.");
+    setConnectionStatus("connecting");
+    setupStompClient();
+
+    return () => {
+      console.log("[DEBUG] Limpieza de STOMP.");
+      if (clientRef.current && clientRef.current.active) {
+        console.log("[DEBUG] Desactivando.");
+        clientRef.current.deactivate();
       }
       
-      return () => {
-        // clearTimeout(timeoutId);
-      };
+      if (reconnectTimerRef.current) {
+        clearTimeout(reconnectTimerRef.current);
+      }
+      
+      clientRef.current = null;
     }
-  }, [connectionStatus]) // Solo dependemos de connectionStatus para reconectar si es necesario
+  }, []); // Sin dependencias para evitar ciclos
+
+  // Efecto para manejar reconexiones cuando hay errores
+  useEffect(() => {
+    if (connectionStatus === "error" || connectionStatus === "disconnected") {
+      const timer = setTimeout(() => {
+        if (!clientRef.current || !clientRef.current.active) {
+          console.log("[DEBUG] Intentando reconexión tras estado:", connectionStatus);
+          setupStompClient();
+        }
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [connectionStatus]);
 
   const clearNotification = (id: string) => {
     setNotifications((prev) => prev.filter((notification) => notification.id !== id))
@@ -278,15 +237,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const clearAllNotifications = () => {
     setNotifications([])
   }
-
   
   return (
     <NotificationContext.Provider value={{ 
       notifications, 
       clearNotification, 
       clearAllNotifications,
-      connectionStatus,
-      // addTestNotification
+      connectionStatus
     }}>
       {children}
     </NotificationContext.Provider>
