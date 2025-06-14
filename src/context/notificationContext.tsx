@@ -42,6 +42,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const processedNotifications = useRef<Set<string>>(new Set())
   const connectAttemptRef = useRef<number>(0)
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const WEBSOCKED_URL = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "http://localhost:8080/ws-mantenimiento";
+
   
   const generateContentHash = (message: string, timestamp: number): string => {
     return `${message}-${Math.floor(timestamp / 10000)}`
@@ -128,7 +131,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const client = new Client({
         webSocketFactory: () => {
           console.log("[DEBUG] Creando SockJS con URL http://localhost:8080/ws-mantenimiento");
-          return new SockJS("http://localhost:8080/ws-mantenimiento");
+          return new SockJS(WEBSOCKED_URL);
         },
         reconnectDelay: 5000,
         heartbeatIncoming: 4000,
