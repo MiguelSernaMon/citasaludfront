@@ -130,7 +130,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     try {
       const client = new Client({
         webSocketFactory: () => {
-          console.log("[DEBUG] Creando SockJS con URL http://localhost:8080/ws-mantenimiento");
+          console.log(`[DEBUG] Creando SockJS con URL ${WEBSOCKED_URL}`);
           return new SockJS(WEBSOCKED_URL);
         },
         reconnectDelay: 5000,
