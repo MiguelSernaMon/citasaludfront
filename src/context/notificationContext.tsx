@@ -50,23 +50,44 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return `${message}-${Math.floor(timestamp / 10000)}`
   }
 
-  const formatDate = (dateArray: number[]) => {
-    if (!dateArray || dateArray.length < 5) return "Fecha no disponible";
-    
-    const [year, month, day, hour, minute] = dateArray;
-    const date = new Date(year, month-1, day, hour, minute);
-    return date.toLocaleString('es-ES', { 
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Reemplaza la función formatDate existente con esta nueva implementación
+  const formatDate = (dateValue: number[] | string): string => {
+    try {
+      // Si recibimos un array de números (formato anterior)
+      if (Array.isArray(dateValue) && dateValue.length >= 5) {
+        const [year, month, day, hour, minute] = dateValue;
+        const date = new Date(year, month-1, day, hour, minute);
+        return date.toLocaleString('es-ES', { 
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } 
+      // Si recibimos una cadena ISO (formato actual)
+      else if (typeof dateValue === 'string') {
+        const date = new Date(dateValue);
+        return date.toLocaleString('es-ES', { 
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      return "Fecha no disponible";
+    } catch (error) {
+      console.error("Error al formatear fecha:", error);
+      return "Formato de fecha incorrecto";
+    }
   };
 
   const kafkaMessageToNotification = (kafkaMessage: KafkaMessage): Notification => {
+    // Ahora manejamos correctamente tanto arrays como strings ISO
     const fechaInicio = formatDate(kafkaMessage.fechaInicio);
     const fechaFin = formatDate(kafkaMessage.fechaFin);
+    
     const message = `Mantenimiento en consultorio ${kafkaMessage.consultorioId}: "${kafkaMessage.motivo}" programado desde ${fechaInicio} hasta ${fechaFin}`;
     const now = Date.now();
     const contentHash = generateContentHash(message, now);
